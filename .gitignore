@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+bun.lockb
+
+# Build outputs
+dist/
+**/dist/
+.next/
+**/.next/
+build/
+**/build/
+*.tsbuildinfo
+out/
+**/.turbo/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Keep example files
+!.env.example
+!.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+bun-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temp
+tmp/
+temp/
+*.tmp
+
+# Uploads
+uploads/
+
+# External projects (not part of BusinessPro)
+scriptassist-main/

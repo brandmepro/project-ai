@@ -1,0 +1,48 @@
+{
+  "name": "@businesspro/monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Business Pro - AI-driven social media automation platform",
+  "workspaces": [
+    "our-app",
+    "api",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"bun:dev:*\"",
+    "dev:api": "bun --filter api start:dev",
+    "dev:web": "bun --filter my-v0-project dev",
+    "dev:ai": "bun --filter @businesspro/ai dev",
+    "build": "bun run --filter @businesspro/ai build && bun run --filter api build && bun run --filter my-v0-project build",
+    "build:ai": "bun run --filter @businesspro/ai build",
+    "build:api": "bun run --filter api build",
+    "build:web": "bun run --filter my-v0-project build",
+    "start": "bun run --filter api start:prod",
+    "start:web": "bun run --filter my-v0-project start",
+    "lint": "bun run --filter \"*\" lint",
+    "lint:api": "bun run --filter api lint",
+    "lint:web": "bun run --filter my-v0-project lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "test": "bun run --filter api test",
+    "test:watch": "bun run --filter api test:watch",
+    "test:cov": "bun run --filter api test:cov",
+    "migration:generate": "cd api && bun run migration:generate",
+    "migration:run": "cd api && bun run migration:run",
+    "migration:revert": "cd api && bun run migration:revert",
+    "clean": "bun run --filter \"*\" --parallel exec rm -rf node_modules dist .next coverage",
+    "clean:install": "bun run clean && rm -rf node_modules && bun install"
+  },
+  "dependencies": {
+    "class-validator": "^0.14.3"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  }
+}

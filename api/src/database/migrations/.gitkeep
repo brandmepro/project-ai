@@ -1,0 +1,10 @@
+# TypeORM migrations will be generated here
+# 
+# Generate a new migration:
+#   bun run migration:generate -- MigrationName
+#
+# Run migrations:
+#   bun run migration:run
+#
+# Revert last migration:
+#   bun run migration:revert

@@ -1,0 +1,7 @@
+[workspace]
+# Bun workspace configuration
+members = [
+  "our-app",
+  "api", 
+  "packages/*"
+]
