@@ -2,7 +2,6 @@ import { generateText, streamText } from 'ai';
 import {
   AIModel,
   CostBucket,
-  AIFeature,
   AIRequestConfig,
   AIResponseMetadata,
   AIGatewayError,
@@ -16,14 +15,12 @@ import {
  */
 export class VercelAIGateway {
   private readonly apiKey: string;
-  private readonly baseURL: string;
 
-  constructor(apiKey: string, baseURL: string = 'https://ai-gateway.vercel.sh/v1') {
+  constructor(apiKey: string, _baseURL: string = 'https://ai-gateway.vercel.sh/v1') {
     if (!apiKey) {
       throw new Error('AI_GATEWAY_API_KEY is required');
     }
     this.apiKey = apiKey;
-    this.baseURL = baseURL;
   }
 
   /**
@@ -99,8 +96,6 @@ export class VercelAIGateway {
         metadata,
       };
     } catch (error: any) {
-      const durationMs = Date.now() - startTime;
-      
       throw new AIGatewayError(
         `AI Generation failed: ${error.message}`,
         error.statusCode || 500,

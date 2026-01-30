@@ -18,9 +18,11 @@ export {
   AITaskComplexity,
   ModelCapability,
   AIProvider,
+  FeedbackType,
+} from './types/tasks';
+export type {
   AITaskRequest,
   ModelSelectionResult,
-  FeedbackType,
   UserFeedback,
   ModelPerformanceMetrics,
 } from './types/tasks';
