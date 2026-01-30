@@ -27,6 +27,7 @@ import {
   IconSparkles,
 } from '@tabler/icons-react'
 import { useAppStore, type Platform } from '@/lib/store'
+import { useAIControllerGenerateWithTask } from '@businesspro/api-client'
 
 const platformIcons: Record<Platform, typeof IconBrandInstagram> = {
   instagram: IconBrandInstagram,
@@ -100,30 +101,12 @@ export function ContentPreview({ className }: ContentPreviewProps) {
   
   const activePlatform = createFlow.platforms[0] || 'instagram'
   const PlatformIcon = platformIcons[activePlatform]
+  
+  const generateMutation = useAIControllerGenerateWithTask()
 
-  useEffect(() => {
-    if (createFlow.businessType || createFlow.tone || createFlow.contentGoal) {
-      setIsGenerating(true)
-      const timer = setTimeout(() => {
-        const { caption, hashtags } = generateCaption(
-          createFlow.businessType,
-          createFlow.contentGoal,
-          createFlow.tone,
-          createFlow.language
-        )
-        updateCreateFlow({ 
-          generatedCaption: caption,
-          generatedHashtags: hashtags,
-        })
-        setIsGenerating(false)
-      }, 800)
-      return () => clearTimeout(timer)
-    }
-  }, [createFlow.businessType, createFlow.tone, createFlow.contentGoal, createFlow.language, updateCreateFlow])
-
-  const handleRegenerate = () => {
-    setIsGenerating(true)
-    setTimeout(() => {
+  const handleAIGeneration = async () => {
+    if (!createFlow.businessType || !createFlow.contentGoal) {
+      // Fallback to mock data if not enough info
       const { caption, hashtags } = generateCaption(
         createFlow.businessType,
         createFlow.contentGoal,
@@ -131,11 +114,56 @@ export function ContentPreview({ className }: ContentPreviewProps) {
         createFlow.language
       )
       updateCreateFlow({ 
-        generatedCaption: caption + ' #fresh',
+        generatedCaption: caption,
         generatedHashtags: hashtags,
       })
+      return
+    }
+
+    setIsGenerating(true)
+    try {
+      const response: any = await generateMutation.mutateAsync({
+        data: {
+          taskType: createFlow.contentGoal || 'awareness',
+          businessType: createFlow.businessType,
+          tone: createFlow.tone || 'friendly',
+          language: createFlow.language || 'english',
+          platform: activePlatform,
+        }
+      })
+      
+      // Extract caption and hashtags from AI response
+      const result = response?.data || response
+      updateCreateFlow({ 
+        generatedCaption: result.content || result.caption || generateCaption(createFlow.businessType, createFlow.contentGoal, createFlow.tone, createFlow.language).caption,
+        generatedHashtags: result.hashtags || generateCaption(createFlow.businessType, createFlow.contentGoal, createFlow.tone, createFlow.language).hashtags,
+      })
+    } catch (error) {
+      console.error('AI generation failed, using fallback:', error)
+      // Fallback to mock data
+      const { caption, hashtags } = generateCaption(
+        createFlow.businessType,
+        createFlow.contentGoal,
+        createFlow.tone,
+        createFlow.language
+      )
+      updateCreateFlow({ 
+        generatedCaption: caption,
+        generatedHashtags: hashtags,
+      })
+    } finally {
       setIsGenerating(false)
-    }, 1000)
+    }
+  }
+
+  useEffect(() => {
+    if (createFlow.businessType && createFlow.contentGoal && createFlow.tone && createFlow.language) {
+      handleAIGeneration()
+    }
+  }, [createFlow.businessType, createFlow.tone, createFlow.contentGoal, createFlow.language])
+
+  const handleRegenerate = () => {
+    handleAIGeneration()
   }
 
   return (
@@ -207,7 +235,7 @@ export function ContentPreview({ className }: ContentPreviewProps) {
                   </Text>
                   <Text size="xs" c="dimmed">
                     {createFlow.scheduledDate 
-                      ? `Scheduled for ${createFlow.scheduledDate.toLocaleDateString()}`
+                      ? `Scheduled for ${new Date(createFlow.scheduledDate).toLocaleDateString()}`
                       : 'Just now'
                     }
                   </Text>

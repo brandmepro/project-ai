@@ -13,6 +13,8 @@ import {
   TextInput,
   Box,
   Badge,
+  Loader,
+  Center,
 } from '@mantine/core'
 import { 
   IconPlus, 
@@ -23,37 +25,60 @@ import {
 } from '@tabler/icons-react'
 import Link from 'next/link'
 import { ContentCard } from '@/components/content/content-card'
-import { useAppStore, type Platform, type ContentStatus } from '@/lib/store'
+import { 
+  useContentControllerFindAll, 
+  useContentControllerRemove,
+  useContentControllerDuplicate,
+  type ContentControllerFindAllPlatformsItem,
+  type ContentControllerFindAllStatusesItem,
+} from '@businesspro/api-client'
+import { useQueryClient } from '@tanstack/react-query'
 
 export default function ContentPage() {
-  const { contents, deleteContent } = useAppStore()
+  const queryClient = useQueryClient()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [platformFilter, setPlatformFilter] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const limit = 20
 
-  const filteredContents = contents.filter((content) => {
-    const matchesSearch = content.caption.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesPlatform = !platformFilter || content.platform === platformFilter
-    const matchesStatus = !statusFilter || content.status === statusFilter
-    return matchesSearch && matchesPlatform && matchesStatus
+  // Fetch content with filters
+  const { data: contentData, isLoading, error } = useContentControllerFindAll({
+    page,
+    limit,
+    search: searchQuery || undefined,
+    platforms: platformFilter ? [platformFilter as any] : undefined,
+    statuses: statusFilter ? [statusFilter as any] : undefined,
   })
 
-  const handleDelete = (id: string) => {
-    deleteContent(id)
+  const deleteMutation = useContentControllerRemove()
+  const duplicateMutation = useContentControllerDuplicate()
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync({ id })
+      queryClient.invalidateQueries({ queryKey: ['contentControllerFindAll'] })
+    } catch (error) {
+      console.error('Delete failed:', error)
+    }
   }
 
-  const handleDuplicate = (id: string) => {
-    const content = contents.find(c => c.id === id)
-    if (content) {
-      // Would typically add a duplicated version
-      console.log('Duplicate:', id)
+  const handleDuplicate = async (id: string) => {
+    try {
+      await duplicateMutation.mutateAsync({ id })
+      queryClient.invalidateQueries({ queryKey: ['contentControllerFindAll'] })
+    } catch (error) {
+      console.error('Duplicate failed:', error)
     }
   }
 
   const handleEdit = (id: string) => {
     console.log('Edit:', id)
   }
+
+  const contents = (contentData as any)?.data || []
+  const totalItems = (contentData as any)?.total || 0
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -112,7 +137,7 @@ export default function ContentPage() {
                   { value: 'google-business', label: 'Google Business' },
                 ]}
                 value={platformFilter}
-                onChange={setPlatformFilter}
+                onChange={(value) => setPlatformFilter(value)}
                 clearable
                 className="w-40"
               />
@@ -125,7 +150,7 @@ export default function ContentPage() {
                   { value: 'posted', label: 'Posted' },
                 ]}
                 value={statusFilter}
-                onChange={setStatusFilter}
+                onChange={(value) => setStatusFilter(value)}
                 clearable
                 className="w-32"
               />
@@ -133,7 +158,7 @@ export default function ContentPage() {
 
             <Group gap="sm">
               <Badge variant="light" color="violet">
-                {filteredContents.length} items
+                {totalItems} items
               </Badge>
               
               <SegmentedControl
@@ -160,7 +185,7 @@ export default function ContentPage() {
             transition={{ duration: 0.2 }}
           >
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
-              {filteredContents.map((content, index) => (
+              {contents.map((content: any, index: number) => (
                 <motion.div
                   key={content.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -187,7 +212,7 @@ export default function ContentPage() {
             transition={{ duration: 0.2 }}
           >
             <Stack gap="sm">
-              {filteredContents.map((content, index) => (
+              {contents.map((content: any, index: number) => (
                 <motion.div
                   key={content.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -209,7 +234,7 @@ export default function ContentPage() {
       </AnimatePresence>
 
       {/* Empty State */}
-      {filteredContents.length === 0 && (
+      {!isLoading && contents.length === 0 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

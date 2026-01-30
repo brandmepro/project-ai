@@ -1,9 +1,17 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { BusinessType } from '../common/enums';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
+import { UpdateNotificationsDto } from './dto/update-notifications.dto';
+import { UpdateBusinessProfileDto } from './dto/update-business-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -84,5 +92,139 @@ export class UsersService {
 
   async validatePassword(user: User, password: string): Promise<boolean> {
     return bcrypt.compare(password, user.passwordHash);
+  }
+
+  async updateBusinessProfile(
+    userId: string,
+    updateDto: UpdateBusinessProfileDto,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (updateDto.businessName !== undefined) {
+      user.businessName = updateDto.businessName;
+    }
+    if (updateDto.businessType !== undefined) {
+      user.businessType = updateDto.businessType;
+    }
+    if (updateDto.businessDescription !== undefined) {
+      user.businessDescription = updateDto.businessDescription;
+    }
+
+    return this.usersRepository.save(user);
+  }
+
+  async updatePreferences(
+    userId: string,
+    updateDto: UpdatePreferencesDto,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.preferences = {
+      ...user.preferences,
+      ...updateDto,
+    };
+
+    return this.usersRepository.save(user);
+  }
+
+  async updateNotifications(
+    userId: string,
+    updateDto: UpdateNotificationsDto,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.notificationSettings = {
+      ...user.notificationSettings,
+      ...updateDto,
+    };
+
+    return this.usersRepository.save(user);
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isValidPassword = await this.validatePassword(user, currentPassword);
+    if (!isValidPassword) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.usersRepository.save(user);
+  }
+
+  async updateAvatar(userId: string, avatarUrl: string): Promise<User> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.avatarUrl = avatarUrl;
+    return this.usersRepository.save(user);
+  }
+
+  async enable2FA(userId: string, secret: string): Promise<User> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.twoFactorEnabled = true;
+    user.twoFactorSecret = secret;
+    return this.usersRepository.save(user);
+  }
+
+  async disable2FA(userId: string): Promise<User> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = null;
+    return this.usersRepository.save(user);
+  }
+
+  async getPreferences(userId: string) {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user.preferences;
+  }
+
+  async getNotificationSettings(userId: string) {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user.notificationSettings;
   }
 }

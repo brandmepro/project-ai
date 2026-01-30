@@ -90,6 +90,14 @@ export class Content {
   @Column({ type: 'int', nullable: true, name: 'engagement_estimate' })
   engagementEstimate: number;
 
+  @Column({ type: 'jsonb', default: {}, name: 'engagement' })
+  engagement: {
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    reach?: number;
+  };
+
   @Column({ type: 'text', array: true, default: [], name: 'ai_tags' })
   aiTags: string[];
 

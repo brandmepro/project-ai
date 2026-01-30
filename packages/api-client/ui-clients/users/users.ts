@@ -16,6 +16,13 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
+import type {
+  ChangePasswordDtoDTO,
+  UpdateBusinessProfileDtoDTO,
+  UpdateNotificationsDtoDTO,
+  UpdatePreferencesDtoDTO,
+} from '.././schemas';
+
 import { customAxiosInstance } from '.././axios-instance';
 
 /**
@@ -137,6 +144,635 @@ export const useUsersControllerUpdateProfile = <TError = unknown, TContext = unk
   TContext
 > => {
   const mutationOptions = getUsersControllerUpdateProfileMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * @summary Update business profile
+ */
+export const usersControllerUpdateBusinessProfile = (
+  updateBusinessProfileDtoDTO: UpdateBusinessProfileDtoDTO,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/users/business-profile`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: updateBusinessProfileDtoDTO,
+  });
+};
+
+export const getUsersControllerUpdateBusinessProfileMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerUpdateBusinessProfile>>,
+    TError,
+    { data: UpdateBusinessProfileDtoDTO },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof usersControllerUpdateBusinessProfile>>,
+  TError,
+  { data: UpdateBusinessProfileDtoDTO },
+  TContext
+> => {
+  const mutationKey = ['usersControllerUpdateBusinessProfile'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof usersControllerUpdateBusinessProfile>>,
+    { data: UpdateBusinessProfileDtoDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return usersControllerUpdateBusinessProfile(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UsersControllerUpdateBusinessProfileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerUpdateBusinessProfile>>
+>;
+export type UsersControllerUpdateBusinessProfileMutationBody = UpdateBusinessProfileDtoDTO;
+export type UsersControllerUpdateBusinessProfileMutationError = unknown;
+
+/**
+ * @summary Update business profile
+ */
+export const useUsersControllerUpdateBusinessProfile = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerUpdateBusinessProfile>>,
+    TError,
+    { data: UpdateBusinessProfileDtoDTO },
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof usersControllerUpdateBusinessProfile>>,
+  TError,
+  { data: UpdateBusinessProfileDtoDTO },
+  TContext
+> => {
+  const mutationOptions = getUsersControllerUpdateBusinessProfileMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * @summary Get user preferences
+ */
+export const usersControllerGetPreferences = (signal?: AbortSignal) => {
+  return customAxiosInstance<void>({ url: `/api/v1/users/preferences`, method: 'GET', signal });
+};
+
+export const getUsersControllerGetPreferencesQueryKey = () => {
+  return [`/api/v1/users/preferences`] as const;
+};
+
+export const getUsersControllerGetPreferencesQueryOptions = <
+  TData = Awaited<ReturnType<typeof usersControllerGetPreferences>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetPreferences>>, TError, TData>;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getUsersControllerGetPreferencesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetPreferences>>> = ({
+    signal,
+  }) => usersControllerGetPreferences(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof usersControllerGetPreferences>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type UsersControllerGetPreferencesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerGetPreferences>>
+>;
+export type UsersControllerGetPreferencesQueryError = unknown;
+
+/**
+ * @summary Get user preferences
+ */
+
+export function useUsersControllerGetPreferences<
+  TData = Awaited<ReturnType<typeof usersControllerGetPreferences>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetPreferences>>, TError, TData>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getUsersControllerGetPreferencesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Update user preferences
+ */
+export const usersControllerUpdatePreferences = (
+  updatePreferencesDtoDTO: UpdatePreferencesDtoDTO,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/users/preferences`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: updatePreferencesDtoDTO,
+  });
+};
+
+export const getUsersControllerUpdatePreferencesMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerUpdatePreferences>>,
+    TError,
+    { data: UpdatePreferencesDtoDTO },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof usersControllerUpdatePreferences>>,
+  TError,
+  { data: UpdatePreferencesDtoDTO },
+  TContext
+> => {
+  const mutationKey = ['usersControllerUpdatePreferences'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof usersControllerUpdatePreferences>>,
+    { data: UpdatePreferencesDtoDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return usersControllerUpdatePreferences(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UsersControllerUpdatePreferencesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerUpdatePreferences>>
+>;
+export type UsersControllerUpdatePreferencesMutationBody = UpdatePreferencesDtoDTO;
+export type UsersControllerUpdatePreferencesMutationError = unknown;
+
+/**
+ * @summary Update user preferences
+ */
+export const useUsersControllerUpdatePreferences = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerUpdatePreferences>>,
+    TError,
+    { data: UpdatePreferencesDtoDTO },
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof usersControllerUpdatePreferences>>,
+  TError,
+  { data: UpdatePreferencesDtoDTO },
+  TContext
+> => {
+  const mutationOptions = getUsersControllerUpdatePreferencesMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * @summary Get notification settings
+ */
+export const usersControllerGetNotifications = (signal?: AbortSignal) => {
+  return customAxiosInstance<void>({ url: `/api/v1/users/notifications`, method: 'GET', signal });
+};
+
+export const getUsersControllerGetNotificationsQueryKey = () => {
+  return [`/api/v1/users/notifications`] as const;
+};
+
+export const getUsersControllerGetNotificationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof usersControllerGetNotifications>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof usersControllerGetNotifications>>,
+    TError,
+    TData
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getUsersControllerGetNotificationsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetNotifications>>> = ({
+    signal,
+  }) => usersControllerGetNotifications(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof usersControllerGetNotifications>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type UsersControllerGetNotificationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerGetNotifications>>
+>;
+export type UsersControllerGetNotificationsQueryError = unknown;
+
+/**
+ * @summary Get notification settings
+ */
+
+export function useUsersControllerGetNotifications<
+  TData = Awaited<ReturnType<typeof usersControllerGetNotifications>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof usersControllerGetNotifications>>,
+    TError,
+    TData
+  >;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getUsersControllerGetNotificationsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Update notification settings
+ */
+export const usersControllerUpdateNotifications = (
+  updateNotificationsDtoDTO: UpdateNotificationsDtoDTO,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/users/notifications`,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: updateNotificationsDtoDTO,
+  });
+};
+
+export const getUsersControllerUpdateNotificationsMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerUpdateNotifications>>,
+    TError,
+    { data: UpdateNotificationsDtoDTO },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof usersControllerUpdateNotifications>>,
+  TError,
+  { data: UpdateNotificationsDtoDTO },
+  TContext
+> => {
+  const mutationKey = ['usersControllerUpdateNotifications'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof usersControllerUpdateNotifications>>,
+    { data: UpdateNotificationsDtoDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return usersControllerUpdateNotifications(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UsersControllerUpdateNotificationsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerUpdateNotifications>>
+>;
+export type UsersControllerUpdateNotificationsMutationBody = UpdateNotificationsDtoDTO;
+export type UsersControllerUpdateNotificationsMutationError = unknown;
+
+/**
+ * @summary Update notification settings
+ */
+export const useUsersControllerUpdateNotifications = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerUpdateNotifications>>,
+    TError,
+    { data: UpdateNotificationsDtoDTO },
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof usersControllerUpdateNotifications>>,
+  TError,
+  { data: UpdateNotificationsDtoDTO },
+  TContext
+> => {
+  const mutationOptions = getUsersControllerUpdateNotificationsMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * @summary Change password
+ */
+export const usersControllerChangePassword = (
+  changePasswordDtoDTO: ChangePasswordDtoDTO,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/users/password`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: changePasswordDtoDTO,
+    signal,
+  });
+};
+
+export const getUsersControllerChangePasswordMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerChangePassword>>,
+    TError,
+    { data: ChangePasswordDtoDTO },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof usersControllerChangePassword>>,
+  TError,
+  { data: ChangePasswordDtoDTO },
+  TContext
+> => {
+  const mutationKey = ['usersControllerChangePassword'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof usersControllerChangePassword>>,
+    { data: ChangePasswordDtoDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return usersControllerChangePassword(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UsersControllerChangePasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerChangePassword>>
+>;
+export type UsersControllerChangePasswordMutationBody = ChangePasswordDtoDTO;
+export type UsersControllerChangePasswordMutationError = unknown;
+
+/**
+ * @summary Change password
+ */
+export const useUsersControllerChangePassword = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerChangePassword>>,
+    TError,
+    { data: ChangePasswordDtoDTO },
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof usersControllerChangePassword>>,
+  TError,
+  { data: ChangePasswordDtoDTO },
+  TContext
+> => {
+  const mutationOptions = getUsersControllerChangePasswordMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * @summary Upload profile avatar
+ */
+export const usersControllerUploadAvatar = (signal?: AbortSignal) => {
+  return customAxiosInstance<void>({ url: `/api/v1/users/avatar`, method: 'POST', signal });
+};
+
+export const getUsersControllerUploadAvatarMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerUploadAvatar>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof usersControllerUploadAvatar>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ['usersControllerUploadAvatar'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof usersControllerUploadAvatar>>,
+    void
+  > = () => {
+    return usersControllerUploadAvatar();
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UsersControllerUploadAvatarMutationResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerUploadAvatar>>
+>;
+
+export type UsersControllerUploadAvatarMutationError = unknown;
+
+/**
+ * @summary Upload profile avatar
+ */
+export const useUsersControllerUploadAvatar = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerUploadAvatar>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof usersControllerUploadAvatar>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions = getUsersControllerUploadAvatarMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * @summary Enable two-factor authentication
+ */
+export const usersControllerEnable2FA = (signal?: AbortSignal) => {
+  return customAxiosInstance<void>({ url: `/api/v1/users/2fa/enable`, method: 'POST', signal });
+};
+
+export const getUsersControllerEnable2FAMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerEnable2FA>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof usersControllerEnable2FA>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ['usersControllerEnable2FA'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof usersControllerEnable2FA>>,
+    void
+  > = () => {
+    return usersControllerEnable2FA();
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UsersControllerEnable2FAMutationResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerEnable2FA>>
+>;
+
+export type UsersControllerEnable2FAMutationError = unknown;
+
+/**
+ * @summary Enable two-factor authentication
+ */
+export const useUsersControllerEnable2FA = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerEnable2FA>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof usersControllerEnable2FA>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions = getUsersControllerEnable2FAMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * @summary Disable two-factor authentication
+ */
+export const usersControllerDisable2FA = (signal?: AbortSignal) => {
+  return customAxiosInstance<void>({ url: `/api/v1/users/2fa/disable`, method: 'POST', signal });
+};
+
+export const getUsersControllerDisable2FAMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerDisable2FA>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof usersControllerDisable2FA>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ['usersControllerDisable2FA'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof usersControllerDisable2FA>>,
+    void
+  > = () => {
+    return usersControllerDisable2FA();
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UsersControllerDisable2FAMutationResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerDisable2FA>>
+>;
+
+export type UsersControllerDisable2FAMutationError = unknown;
+
+/**
+ * @summary Disable two-factor authentication
+ */
+export const useUsersControllerDisable2FA = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerDisable2FA>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof usersControllerDisable2FA>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions = getUsersControllerDisable2FAMutationOptions(options);
 
   return useMutation(mutationOptions);
 };

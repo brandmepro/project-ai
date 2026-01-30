@@ -283,6 +283,18 @@ export function Signup({
                       </Anchor>
                     </Text>
                   )}
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <Text size="xs" ta="center" mt="xl" c="dimmed" style={{ lineHeight: 1.6 }}>
+                      Built with ❤️ by <Text component="span" fw={600} c="violet">Riya Tiwari</Text>
+                      <br />
+                      <Text component="span" size="xs" c="dimmed">Founder & CEO, Business Pro</Text>
+                    </Text>
+                  </motion.div>
                 </Stack>
               </motion.div>
             )}

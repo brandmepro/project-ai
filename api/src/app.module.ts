@@ -14,6 +14,10 @@ import aiConfig from './config/ai.config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AIModule } from './ai/ai.module';
+import { ContentModule } from './content/content.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { PlatformsModule } from './platforms/platforms.module';
 
 @Module({
   imports: [
@@ -43,6 +47,10 @@ import { AIModule } from './ai/ai.module';
     AuthModule,
     UsersModule,
     AIModule,
+    ContentModule,
+    AnalyticsModule,
+    DashboardModule,
+    PlatformsModule,
   ],
   providers: [
     // Global JWT Guard - All routes protected by default

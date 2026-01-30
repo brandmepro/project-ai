@@ -19,6 +19,9 @@ import {
 import { ContentPreview } from '@/components/create/content-preview'
 import { StepTimeline } from '@/components/create/step-timeline'
 import { useAppStore } from '@/lib/store'
+import { useContentControllerCreate } from '@businesspro/api-client'
+import { notifications } from '@mantine/notifications'
+import { useRouter } from 'next/navigation'
 
 const steps = [
   { id: 0, title: 'Business', icon: IconBuilding, shortTitle: 'Type' },
@@ -34,6 +37,8 @@ export default function CreatePage() {
   const { createFlow, resetCreateFlow, setCreateFlowStep } = useAppStore()
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] = useDisclosure(false)
   const isMobile = useMediaQuery('(max-width: 1023px)')
+  const router = useRouter()
+  const createContentMutation = useContentControllerCreate()
 
   const isStepCompleted = (stepId: number) => {
     switch (stepId) {
@@ -72,6 +77,95 @@ export default function CreatePage() {
   const goToNextStep = () => {
     if (createFlow.currentStep < 6) {
       setCreateFlowStep(createFlow.currentStep + 1)
+    }
+  }
+
+  const handleSaveAsDraft = async () => {
+    if (!createFlow.generatedCaption) {
+      notifications.show({
+        title: 'Error',
+        message: 'Please generate content first',
+        color: 'red',
+      })
+      return
+    }
+
+    try {
+      await createContentMutation.mutateAsync({
+        data: {
+          caption: createFlow.generatedCaption,
+          hashtags: createFlow.generatedHashtags,
+          platform: createFlow.platforms[0] as any,
+          status: 'draft' as any,
+          businessType: createFlow.businessType as any,
+          contentGoal: createFlow.contentGoal as any,
+          tone: createFlow.tone as any,
+          language: createFlow.language as any,
+          visualStyle: createFlow.visualStyle as any,
+        }
+      })
+      
+      notifications.show({
+        title: 'Success',
+        message: 'Content saved as draft',
+        color: 'green',
+      })
+      
+      resetCreateFlow()
+      router.push('/content')
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to save content',
+        color: 'red',
+      })
+    }
+  }
+
+  const handleGenerateAndSchedule = async () => {
+    if (!createFlow.generatedCaption || !createFlow.scheduledDate) {
+      notifications.show({
+        title: 'Error',
+        message: 'Please generate content and set a schedule date first',
+        color: 'red',
+      })
+      return
+    }
+
+    try {
+      const scheduledFor = createFlow.scheduledTime 
+        ? new Date(`${createFlow.scheduledDate.toISOString().split('T')[0]}T${createFlow.scheduledTime}`)
+        : createFlow.scheduledDate
+
+      await createContentMutation.mutateAsync({
+        data: {
+          caption: createFlow.generatedCaption,
+          hashtags: createFlow.generatedHashtags,
+          platform: createFlow.platforms[0] as any,
+          status: 'scheduled' as any,
+          businessType: createFlow.businessType as any,
+          contentGoal: createFlow.contentGoal as any,
+          tone: createFlow.tone as any,
+          language: createFlow.language as any,
+          visualStyle: createFlow.visualStyle as any,
+          scheduledFor: scheduledFor,
+        }
+      })
+      
+      notifications.show({
+        title: 'Success',
+        message: 'Content scheduled successfully',
+        color: 'green',
+      })
+      
+      resetCreateFlow()
+      router.push('/calendar')
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to schedule content',
+        color: 'red',
+      })
     }
   }
 
@@ -231,7 +325,9 @@ export default function CreatePage() {
                 <Button 
                   variant="light" 
                   color="violet"
-                  disabled={!isReadyToGenerate}
+                  disabled={!createFlow.generatedCaption}
+                  loading={createContentMutation.isPending}
+                  onClick={handleSaveAsDraft}
                 >
                   Save as Draft
                 </Button>
@@ -239,7 +335,9 @@ export default function CreatePage() {
                   variant="gradient"
                   gradient={{ from: 'violet', to: 'indigo' }}
                   leftSection={<IconSparkles size={18} />}
-                  disabled={!isReadyToGenerate}
+                  disabled={!createFlow.generatedCaption || !createFlow.scheduledDate}
+                  loading={createContentMutation.isPending}
+                  onClick={handleGenerateAndSchedule}
                 >
                   Generate & Schedule
                 </Button>

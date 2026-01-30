@@ -28,6 +28,7 @@ import {
 } from '@tabler/icons-react'
 import Link from 'next/link'
 import { useAppStore, type Platform, type ContentItem } from '@/lib/store'
+import { useContentControllerGetScheduled } from '@businesspro/api-client'
 
 const platformColors: Record<Platform, string> = {
   instagram: 'pink',
@@ -47,16 +48,40 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 export default function CalendarPage() {
-  const { contents } = useAppStore()
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] = useDisclosure(false)
 
-  const scheduledContents = contents.filter(c => c.status === 'scheduled' && c.scheduledDate)
+  // Calculate date range based on view mode
+  const getDateRange = () => {
+    if (viewMode === 'week') {
+      const startOfWeek = new Date(currentDate)
+      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay())
+      const endOfWeek = new Date(startOfWeek)
+      endOfWeek.setDate(startOfWeek.getDate() + 6)
+      return { startDate: startOfWeek, endDate: endOfWeek }
+    } else {
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+      return { startDate: startOfMonth, endDate: endOfMonth }
+    }
+  }
+
+  const { startDate, endDate } = getDateRange()
+  
+  // Fetch scheduled content for the current date range
+  const { data: scheduledContents } = useContentControllerGetScheduled({
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+  })
 
   const getContentForDate = (dateStr: string) => {
-    return scheduledContents.filter(c => c.scheduledDate === dateStr)
+    if (!scheduledContents) return []
+    return (scheduledContents as any[]).filter((c: any) => {
+      const scheduledDate = new Date(c.scheduledFor).toISOString().split('T')[0]
+      return scheduledDate === dateStr
+    })
   }
 
   const handleContentClick = (content: ContentItem) => {

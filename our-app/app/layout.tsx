@@ -6,6 +6,7 @@ import { ColorSchemeScript } from '@mantine/core'
 import { MantineProviders } from '@/components/providers/MantineProviders'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
+import '@mantine/dates/styles.css'
 import './globals.css'
 
 const poppins = Poppins({ 

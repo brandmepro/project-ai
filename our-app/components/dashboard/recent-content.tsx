@@ -3,7 +3,18 @@
 import { motion } from 'framer-motion'
 import { Paper, Text, Group, Badge, Stack, Avatar, Box, ActionIcon } from '@mantine/core'
 import { IconBrandInstagram, IconBrandFacebook, IconBrandWhatsapp, IconBuildingStore, IconDotsVertical } from '@tabler/icons-react'
-import { useAppStore, type Platform, type ContentStatus } from '@/lib/store'
+
+type Platform = 'instagram' | 'facebook' | 'whatsapp' | 'google-business'
+type ContentStatus = 'draft' | 'scheduled' | 'posted' | 'published'
+
+interface Content {
+  id: string
+  caption: string
+  platform: Platform
+  status: ContentStatus
+  scheduledFor?: Date | string
+  createdAt: Date | string
+}
 
 const platformIcons: Record<Platform, typeof IconBrandInstagram> = {
   instagram: IconBrandInstagram,
@@ -23,11 +34,15 @@ const statusColors: Record<ContentStatus, string> = {
   draft: 'gray',
   scheduled: 'violet',
   posted: 'green',
+  published: 'green',
 }
 
-export function RecentContent() {
-  const { contents } = useAppStore()
-  const recentContents = contents.slice(0, 4)
+interface RecentContentProps {
+  recentContent: any[]
+}
+
+export function RecentContent({ recentContent }: RecentContentProps) {
+  const recentContents = recentContent?.slice(0, 4) || []
 
   return (
     <motion.div
@@ -39,7 +54,7 @@ export function RecentContent() {
         <Group justify="space-between" mb="md">
           <Text fw={600} size="lg" className="text-foreground">Recent Content</Text>
           <Badge variant="light" color="violet">
-            {contents.length} total
+            {recentContents.length} total
           </Badge>
         </Group>
 
@@ -61,10 +76,10 @@ export function RecentContent() {
                   
                   <Box className="flex-1 min-w-0">
                     <Text size="sm" fw={500} truncate className="text-foreground">
-                      {content.caption.substring(0, 50)}...
+                      {content.caption?.substring(0, 50)}...
                     </Text>
                     <Text size="xs" c="dimmed">
-                      {content.scheduledDate || content.createdAt}
+                      {content.scheduledFor ? new Date(content.scheduledFor).toLocaleDateString() : new Date(content.createdAt).toLocaleDateString()}
                     </Text>
                   </Box>
 

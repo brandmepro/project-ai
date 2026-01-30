@@ -1,10 +1,14 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 
 // --- Environment Variables for API URL ---
+// Note: Don't include /api/v1 here - it's already in the generated paths from Swagger
 const API_BASE_URL =
-  typeof window !== 'undefined' && (window as any).ENV?.VITE_API_URL
-    ? (window as any).ENV.VITE_API_URL
-    : process.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+  typeof window !== 'undefined' && (window as any).ENV?.NEXT_PUBLIC_API_URL
+    ? (window as any).ENV.NEXT_PUBLIC_API_URL
+    : process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL || 'http://localhost:8000';
+
+console.log('[API Client] API_BASE_URL:', API_BASE_URL);
+console.log('[API Client] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
 
 // --- Custom Error Class for API Errors ---
 export class ApiError extends Error {
@@ -47,45 +51,52 @@ export function transformDates<T>(body: T): T {
   return body;
 }
 
-// --- Request Queue for Idempotency ---
-/**
- * Track in-flight requests to prevent duplicate API calls
- * Key: `${method}:${url}:${JSON.stringify(data)}`
- * Value: Promise of the ongoing request
- */
-const pendingRequests = new Map<string, Promise<any>>();
+// --- Request Queue for Idempotency (DISABLED FOR NOW) ---
+// TODO: Re-enable and fix idempotency logic later
+// /**
+//  * Track in-flight requests to prevent duplicate API calls
+//  * Key: `${method}:${url}:${JSON.stringify(data)}:${timestamp}`
+//  * Value: { promise: Promise, timestamp: number, refCount: number }
+//  */
+// interface PendingRequest {
+//   promise: Promise<any>;
+//   timestamp: number;
+//   refCount: number;
+// }
+//
+// const pendingRequests = new Map<string, PendingRequest>();
+//
+// /**
+//  * Generate a unique key for request deduplication
+//  * Only includes method, url, and data - not headers (to allow auth token refresh)
+//  */
+// function getRequestKey(config: AxiosRequestConfig): string {
+//   const { method = 'get', url = '', data } = config;
+//   const dataKey = data ? JSON.stringify(data) : '';
+//   return `${method.toUpperCase()}:${url}:${dataKey}`;
+// }
+//
+// /**
+//  * Clean up old pending requests (older than 30 seconds)
+//  */
+// function cleanupOldRequests(): void {
+//   const now = Date.now();
+//   const timeout = 30000; // 30 seconds
+//   
+//   for (const [key, request] of pendingRequests.entries()) {
+//     if (now - request.timestamp > timeout) {
+//       pendingRequests.delete(key);
+//     }
+//   }
+// }
 
 /**
- * Generate a unique key for request deduplication
- */
-function getRequestKey(config: AxiosRequestConfig): string {
-  const { method = 'get', url = '', data } = config;
-  const dataKey = data ? JSON.stringify(data) : '';
-  return `${method.toUpperCase()}:${url}:${dataKey}`;
-}
-
-/**
- * Apply interceptors to axios instance for auth, idempotency, and error handling
+ * Apply interceptors to axios instance for auth and error handling
  */
 const applyInterceptors = (instance: AxiosInstance) => {
-  // --- Request Interceptor: Auth Token & Request Deduplication ---
+  // --- Request Interceptor: Auth Token ---
   instance.interceptors.request.use(
     async config => {
-      // Generate request key for deduplication
-      const requestKey = getRequestKey(config);
-
-      // Check if the same request is already in flight (idempotency check)
-      if (pendingRequests.has(requestKey)) {
-        // For idempotent operations (GET), return the existing promise
-        const method = (config.method || 'get').toUpperCase();
-        if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
-          console.log(`[Idempotency] Reusing existing ${method} request:`, config.url);
-          // Wait for the existing request instead of creating a new one
-          const existingPromise = pendingRequests.get(requestKey);
-          throw { isReusedRequest: true, promise: existingPromise };
-        }
-      }
-
       // Special handling for refresh endpoint
       if (config.url?.includes('/auth/refresh')) {
         // Get refresh token from auth storage
@@ -116,25 +127,10 @@ const applyInterceptors = (instance: AxiosInstance) => {
     response => {
       // Transform ISO date strings to Date objects
       response.data = transformDates(response.data);
-
-      // Remove request from pending queue
-      const requestKey = getRequestKey(response.config);
-      pendingRequests.delete(requestKey);
-
       return response;
     },
     error => {
-      // Handle reused requests (idempotency)
-      if (error?.isReusedRequest) {
-        return error.promise;
-      }
-
       if (error instanceof AxiosError) {
-        // Remove request from pending queue on error
-        if (error.config) {
-          const requestKey = getRequestKey(error.config);
-          pendingRequests.delete(requestKey);
-        }
 
         // Handle 401 Unauthorized - clear auth and optionally redirect
         if (error.response?.status === 401) {
@@ -188,31 +184,16 @@ export const API_INSTANCE = createApiInstance(API_BASE_URL);
 // --- Generic Instance Logic (used by Orval-generated mutators) ---
 const genericInstance = <T>(instance: AxiosInstance, config: AxiosRequestConfig): Promise<T> => {
   const source = axios.CancelToken.source();
-  const requestKey = getRequestKey(config);
 
-  // Create the promise for this request
+  // Create the promise for this request (idempotency disabled)
   const promise = instance({
     ...config,
     cancelToken: source.token,
-  })
-    .then(({ data }) => {
-      // Remove from pending requests on success
-      pendingRequests.delete(requestKey);
-      return data;
-    })
-    .catch(error => {
-      // Remove from pending requests on error
-      pendingRequests.delete(requestKey);
-      throw error;
-    });
-
-  // Store in pending requests map for idempotency
-  pendingRequests.set(requestKey, promise);
+  }).then(({ data }) => data);
 
   // Add cancel method to the promise
   (promise as any).cancel = () => {
     source.cancel('Query was cancelled by user');
-    pendingRequests.delete(requestKey);
   };
 
   return promise;
@@ -226,26 +207,27 @@ const genericInstance = <T>(instance: AxiosInstance, config: AxiosRequestConfig)
 export const customAxiosInstance = <T>(config: AxiosRequestConfig): Promise<T> =>
   genericInstance<T>(API_INSTANCE, config);
 
-// --- Helper Functions ---
-/**
- * Manually clear the pending requests queue
- * Useful for testing or when you need to force refresh
- */
-export const clearPendingRequests = () => {
-  pendingRequests.clear();
-};
-
-/**
- * Check if a request is currently pending
- */
-export const isRequestPending = (config: AxiosRequestConfig): boolean => {
-  const requestKey = getRequestKey(config);
-  return pendingRequests.has(requestKey);
-};
-
-/**
- * Get count of pending requests
- */
-export const getPendingRequestsCount = (): number => {
-  return pendingRequests.size;
-};
+// --- Helper Functions (DISABLED - Idempotency off) ---
+// TODO: Re-enable when idempotency is fixed
+// /**
+//  * Manually clear the pending requests queue
+//  * Useful for testing or when you need to force refresh
+//  */
+// export const clearPendingRequests = () => {
+//   pendingRequests.clear();
+// };
+//
+// /**
+//  * Check if a request is currently pending
+//  */
+// export const isRequestPending = (config: AxiosRequestConfig): boolean => {
+//   const requestKey = getRequestKey(config);
+//   return pendingRequests.has(requestKey);
+// };
+//
+// /**
+//  * Get count of pending requests
+//  */
+// export const getPendingRequestsCount = (): number => {
+//   return pendingRequests.size;
+// };

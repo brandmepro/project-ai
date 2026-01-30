@@ -8,7 +8,7 @@ export default function HomePage() {
 
   useEffect(() => {
     // Check if user is authenticated
-    const accessToken = localStorage.getItem('accessToken');
+    const accessToken = localStorage.getItem('auth-token');
     
     if (accessToken) {
       // User is logged in, go to dashboard

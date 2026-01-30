@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Text, Stack, SimpleGrid, Box } from '@mantine/core'
+import { Text, Stack, SimpleGrid, Box, Loader, Center } from '@mantine/core'
 import { 
   IconSparkles, 
   IconCalendarEvent, 
@@ -13,16 +13,33 @@ import {
 import { StatCard } from '@/components/ui/stat-card'
 import { CTACard } from '@/components/ui/cta-card'
 import { RecentContent } from '@/components/dashboard/recent-content'
-import { useAppStore } from '@/lib/store'
+import { useDashboardControllerGetStats, useUsersControllerGetProfile } from '@businesspro/api-client'
 
 export default function DashboardPage() {
-  const { businessName, contents } = useAppStore()
-  
-  const scheduledCount = contents.filter(c => c.status === 'scheduled').length
-  const postedCount = contents.filter(c => c.status === 'posted').length
+  const { data: dashboardData, isLoading, error } = useDashboardControllerGetStats()
+  const { data: userProfile } = useUsersControllerGetProfile()
   
   const currentHour = new Date().getHours()
   const greeting = currentHour < 12 ? 'Good morning' : currentHour < 17 ? 'Good afternoon' : 'Good evening'
+  
+  if (isLoading) {
+    return (
+      <Center h="50vh">
+        <Loader size="lg" />
+      </Center>
+    )
+  }
+  
+  if (error) {
+    return (
+      <Center h="50vh">
+        <Text c="red">Failed to load dashboard data</Text>
+      </Center>
+    )
+  }
+  
+  const { contentStats, overview, recentContent } = dashboardData || {}
+  const userName = (userProfile as any)?.name || (userProfile as any)?.businessName || (userProfile as any)?.email?.split('@')[0] || 'User'
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -33,11 +50,11 @@ export default function DashboardPage() {
         transition={{ duration: 0.4 }}
       >
         <Stack gap={4} mb="xl">
-          <Text size="sm" c="dimmed" fw={500}>
-            {greeting}
-          </Text>
           <Text size="xl" fw={700} className="text-foreground">
-            Welcome back, {businessName}
+            {greeting}, {userName}! 👋
+          </Text>
+          <Text size="sm" c="dimmed">
+            Welcome back! Here's what's happening with your content today.
           </Text>
         </Stack>
       </motion.div>
@@ -66,39 +83,39 @@ export default function DashboardPage() {
       <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md" mb="xl">
         <StatCard
           title="Scheduled Posts"
-          value={scheduledCount}
+          value={contentStats?.scheduled || 0}
           description="Ready to publish"
           icon={IconCalendarEvent}
           color="violet"
         />
         <StatCard
           title="AI Generated"
-          value={contents.length}
-          description="This week"
+          value={contentStats?.total || 0}
+          description="Total content"
           icon={IconSparkles}
           color="indigo"
-          trend={{ value: 23, label: 'vs last week' }}
+          trend={{ value: overview?.postsGrowth || 0, label: 'vs last period' }}
         />
         <StatCard
           title="Posts Published"
-          value={postedCount}
+          value={overview?.postsPublished || 0}
           description="This month"
           icon={IconPhoto}
           color="green"
         />
         <StatCard
           title="Engagement"
-          value="+18%"
+          value={`+${overview?.engagementGrowth || 0}%`}
           description="Overall growth"
           icon={IconTrendingUp}
           color="teal"
-          trend={{ value: 12, label: 'vs last month' }}
+          trend={{ value: overview?.engagementGrowth || 0, label: 'vs last month' }}
         />
       </SimpleGrid>
 
       {/* Content Grid */}
       <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg">
-        <RecentContent />
+        <RecentContent recentContent={recentContent || []} />
         
         {/* Quick Actions */}
         <motion.div

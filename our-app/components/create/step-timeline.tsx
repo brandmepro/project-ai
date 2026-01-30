@@ -145,7 +145,7 @@ export function StepTimeline({ className, mobileMode = false }: StepTimelineProp
       case 3: return tones.find(t => t.value === createFlow.tone)?.label
       case 4: return languages.find(l => l.value === createFlow.language)?.label
       case 5: return visualStyles.find(v => v.value === createFlow.visualStyle)?.label
-      case 6: return createFlow.scheduledDate?.toLocaleDateString()
+      case 6: return createFlow.scheduledDate ? new Date(createFlow.scheduledDate).toLocaleDateString() : null
       default: return null
     }
   }
@@ -241,27 +241,98 @@ export function StepTimeline({ className, mobileMode = false }: StepTimelineProp
         )
       case 6:
         return (
-          <Stack gap="xs">
-            <DatePickerInput
-              placeholder="Select date"
-              value={createFlow.scheduledDate}
-              onChange={(date) => updateCreateFlow({ scheduledDate: date })}
-              minDate={new Date()}
-              size="sm"
-            />
-            <TimeInput
-              placeholder="Select time"
-              value={createFlow.scheduledTime || ''}
-              onChange={(e) => updateCreateFlow({ scheduledTime: e.target.value })}
-              size="sm"
-            />
-            <Group gap="xs" mt="xs">
-              <Switch 
-                size="xs" 
-                label="Auto-suggest best time"
-                color="violet"
+          <Stack gap="md">
+            <Box>
+              <Text size="xs" fw={500} mb={6} className="text-foreground">
+                Publication Date
+              </Text>
+              <DatePickerInput
+                placeholder="Select date"
+                value={createFlow.scheduledDate}
+                onChange={(date) => updateCreateFlow({ scheduledDate: date })}
+                minDate={new Date()}
+                size="md"
+                leftSection={<IconCalendar size={16} className="text-primary" />}
+                valueFormat="DD MMM YYYY"
+                classNames={{
+                  input: 'border-border bg-secondary/30 hover:bg-secondary/50 transition-colors',
+                  day: 'hover:bg-primary/10 data-[selected]:bg-primary data-[selected]:text-primary-foreground',
+                }}
+                styles={{
+                  input: {
+                    borderRadius: '8px',
+                  },
+                }}
+                popoverProps={{
+                  shadow: 'lg',
+                  radius: 'md',
+                }}
               />
-            </Group>
+            </Box>
+            
+            <Box>
+              <Text size="xs" fw={500} mb={6} className="text-foreground">
+                Publication Time
+              </Text>
+              <TimeInput
+                placeholder="HH:MM"
+                value={createFlow.scheduledTime || ''}
+                onChange={(e) => updateCreateFlow({ scheduledTime: e.target.value })}
+                size="md"
+                classNames={{
+                  input: 'border-border bg-secondary/30 hover:bg-secondary/50 transition-colors',
+                }}
+                styles={{
+                  input: {
+                    borderRadius: '8px',
+                  },
+                }}
+              />
+            </Box>
+
+            <Box className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <Group gap="sm" wrap="nowrap">
+                <Switch 
+                  size="sm" 
+                  color="violet"
+                  checked={false}
+                  classNames={{
+                    track: 'cursor-pointer',
+                  }}
+                />
+                <Box className="flex-1">
+                  <Text size="xs" fw={500} className="text-foreground">
+                    Auto-suggest best time
+                  </Text>
+                  <Text size="xs" c="dimmed" className="text-muted-foreground">
+                    AI will recommend optimal posting time
+                  </Text>
+                </Box>
+              </Group>
+            </Box>
+
+            {createFlow.scheduledDate && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Box className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                  <Group gap="xs">
+                    <IconCheck size={14} className="text-green-600 dark:text-green-400" />
+                    <Text size="xs" className="text-green-700 dark:text-green-300">
+                      Scheduled for <strong>{new Date(createFlow.scheduledDate).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric',
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}</strong>
+                      {createFlow.scheduledTime && ` at ${createFlow.scheduledTime}`}
+                    </Text>
+                  </Group>
+                </Box>
+              </motion.div>
+            )}
           </Stack>
         )
       default:

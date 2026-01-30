@@ -20,6 +20,10 @@ export {
 
 // Auto-generated exports from API endpoints
 export * from './ai/ai';
+export * from './analytics/analytics';
 export * from './authentication/authentication';
+export * from './content/content';
+export * from './dashboard/dashboard';
+export * from './platforms/platforms';
 export * from './schemas';
 export * from './users/users';
