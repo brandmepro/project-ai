@@ -1,3 +1,5 @@
+'use client';
+
 import { Paper, Stack, Title, Text, Box } from '@mantine/core';
 import { motion } from 'framer-motion';
 import { IconSparkles } from '@tabler/icons-react';

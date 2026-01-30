@@ -41,6 +41,8 @@ export class AuthService {
       registerDto.password,
       registerDto.name,
       registerDto.businessType,
+      registerDto.businessName,
+      registerDto.goals,
     );
 
     const tokens = await this.generateTokens(user);
@@ -52,7 +54,8 @@ export class AuthService {
         name: user.name,
         businessType: user.businessType,
       },
-      tokens,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   }
 
@@ -67,7 +70,8 @@ export class AuthService {
         name: user.name,
         businessType: user.businessType,
       },
-      tokens,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   }
 

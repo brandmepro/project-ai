@@ -16,7 +16,7 @@ import {
 } from '@businesspro/ai';
 
 @ApiTags('AI')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @Controller('ai')
 @UseGuards(JwtAuthGuard)
 export class AIController {

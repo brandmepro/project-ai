@@ -34,17 +34,7 @@ async function bootstrap() {
     .setTitle('Business Pro API')
     .setDescription('AI-driven social media automation platform for local businesses')
     .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
+    .addBearerAuth()
     .addTag('Authentication', 'User authentication and authorization')
     .addTag('Users', 'User profile management')
     .addTag('AI', 'AI content generation and model selection')
@@ -52,9 +42,11 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  
   SwaggerModule.setup(`${apiPrefix}/docs`, app, document, {
     customSiteTitle: 'Business Pro API Documentation',
     customCss: '.swagger-ui .topbar { display: none }',
+    jsonDocumentUrl: `${apiPrefix}/docs-json`,
   });
 
   const port = configService.get<number>('PORT') || 3000;

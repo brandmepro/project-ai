@@ -26,6 +26,9 @@ export class User {
   @Column()
   name: string;
 
+  @Column({ nullable: true, name: 'business_name' })
+  businessName: string;
+
   @Column({
     type: 'enum',
     enum: BusinessType,
@@ -33,6 +36,9 @@ export class User {
     name: 'business_type',
   })
   businessType: BusinessType;
+
+  @Column({ type: 'text', array: true, default: '{}', name: 'content_goals' })
+  contentGoals: string[];
 
   @Column({ default: false, name: 'email_verified' })
   emailVerified: boolean;

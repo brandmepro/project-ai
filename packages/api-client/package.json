@@ -1,0 +1,27 @@
+{
+  "name": "@businesspro/api-client",
+  "version": "1.0.0",
+  "description": "Business Pro API client with React Query hooks",
+  "private": true,
+  "type": "module",
+  "main": "./ui-clients/index.ts",
+  "module": "./ui-clients/index.ts",
+  "types": "./ui-clients/index.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "generate": "orval --config ../../orval.config.ts"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.62.13",
+    "axios": "^1.7.9",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "orval": "^7.3.0",
+    "typescript": "^5.7.3"
+  }
+}

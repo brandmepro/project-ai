@@ -7,7 +7,7 @@ import { UsersService } from './users.service';
 import { BusinessType } from '../common/enums';
 
 @ApiTags('Users')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {

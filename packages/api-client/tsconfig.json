@@ -2,10 +2,12 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./ui-clients",
     "declaration": true,
+    "declarationMap": true,
+    "composite": false,
     "noEmit": false
   },
-  "include": ["src/**/*"],
+  "include": ["ui-clients/**/*"],
   "exclude": ["node_modules", "dist"]
 }

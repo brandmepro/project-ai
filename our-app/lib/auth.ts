@@ -6,11 +6,15 @@
  * Store authentication tokens
  */
 export function setAuthTokens(accessToken: string, refreshToken: string) {
-  // Store in localStorage for client-side use
-  localStorage.setItem('accessToken', accessToken);
-  localStorage.setItem('refreshToken', refreshToken);
+  // Store in localStorage for axios interceptor
+  localStorage.setItem('auth-token', accessToken);
+  localStorage.setItem('auth-storage', JSON.stringify({
+    state: {
+      refreshToken,
+    }
+  }));
   
-  // Store in cookies for middleware
+  // Also store in cookies for middleware
   document.cookie = `accessToken=${accessToken}; path=/; max-age=86400; SameSite=Strict`;
   document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Strict`;
 }
@@ -20,6 +24,8 @@ export function setAuthTokens(accessToken: string, refreshToken: string) {
  */
 export function clearAuthTokens() {
   // Clear localStorage
+  localStorage.removeItem('auth-token');
+  localStorage.removeItem('auth-storage');
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   
@@ -33,7 +39,7 @@ export function clearAuthTokens() {
  */
 export function getAccessToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('accessToken');
+  return localStorage.getItem('auth-token');
 }
 
 /**
@@ -41,7 +47,14 @@ export function getAccessToken(): string | null {
  */
 export function getRefreshToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('refreshToken');
+  const authData = localStorage.getItem('auth-storage');
+  if (!authData) return null;
+  try {
+    const parsed = JSON.parse(authData);
+    return parsed?.state?.refreshToken || null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -49,31 +62,4 @@ export function getRefreshToken(): string | null {
  */
 export function isAuthenticated(): boolean {
   return !!getAccessToken();
-}
-
-/**
- * Logout user and redirect to login
- */
-export async function logout(apiUrl?: string) {
-  const token = getAccessToken();
-  
-  if (token && apiUrl) {
-    try {
-      // Call logout API
-      await fetch(`${apiUrl}/api/v1/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-    } catch (error) {
-      console.error('Logout API error:', error);
-    }
-  }
-  
-  // Clear tokens locally
-  clearAuthTokens();
-  
-  // Redirect to login
-  window.location.href = '/login';
 }

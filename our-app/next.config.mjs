@@ -13,16 +13,45 @@ const nextConfig = {
     unoptimized: true,
   },
   // Transpile workspace packages
-  transpilePackages: ['@businesspro/auth-ui'],
+  transpilePackages: [
+    '@businesspro/auth-ui',
+    '@mantine/core', 
+    '@mantine/hooks',
+    '@mantine/form',
+    '@mantine/dates',
+    '@mantine/notifications'
+  ],
   
   // Configure Turbopack for monorepo
   turbopack: {
-    // Point to monorepo root where dependencies are installed
-    root: path.join(__dirname, '..'),
+    root: '..',
+    resolveAlias: {
+      // Force resolution to the local node_modules of the app
+      '@mantine/core': './node_modules/@mantine/core',
+      '@mantine/hooks': './node_modules/@mantine/hooks',
+      '@mantine/form': './node_modules/@mantine/form',
+      '@mantine/notifications': './node_modules/@mantine/notifications',
+      'react': './node_modules/react',
+      'react-dom': './node_modules/react-dom',
+    },
   },
   
   // For production builds and file tracing
-  outputFileTracingRoot: path.join(__dirname, '..'),
+  outputFileTracingRoot: '..',
+  
+  webpack: (config) => {
+    // Force webpack to resolve to the same instances
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@mantine/core': path.resolve(__dirname, 'node_modules/@mantine/core'),
+      '@mantine/hooks': path.resolve(__dirname, 'node_modules/@mantine/hooks'),
+      '@mantine/form': path.resolve(__dirname, 'node_modules/@mantine/form'),
+      '@mantine/notifications': path.resolve(__dirname, 'node_modules/@mantine/notifications'),
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+    };
+    return config;
+  },
 }
 
 export default nextConfig

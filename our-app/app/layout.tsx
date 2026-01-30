@@ -4,6 +4,8 @@ import { Poppins } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ColorSchemeScript } from '@mantine/core'
 import { MantineProviders } from '@/components/providers/MantineProviders'
+import '@mantine/core/styles.css'
+import '@mantine/notifications/styles.css'
 import './globals.css'
 
 const poppins = Poppins({ 

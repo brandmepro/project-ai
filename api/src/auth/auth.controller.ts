@@ -43,7 +43,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth()
   @Post('logout')
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
@@ -53,7 +53,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth()
   @Get('me')
   @ApiOperation({ summary: 'Get current user' })
   @ApiResponse({ status: 200, description: 'User details returned' })

@@ -17,6 +17,8 @@ export class UsersService {
     password: string,
     name: string,
     businessType?: BusinessType,
+    businessName?: string,
+    goals?: string[],
   ): Promise<User> {
     const existingUser = await this.usersRepository.findOne({
       where: { email },
@@ -32,7 +34,9 @@ export class UsersService {
       email,
       passwordHash,
       name,
+      businessName: businessName || null,
       businessType,
+      contentGoals: goals || [],
     });
 
     return this.usersRepository.save(user);

@@ -4,47 +4,39 @@ import { useRouter } from 'next/navigation';
 import { Login } from '@businesspro/auth-ui';
 import { notifications } from '@mantine/notifications';
 import { setAuthTokens } from '@/lib/auth';
+import { useAuthControllerLogin, LoginDtoDTO, ApiError } from '@businesspro/api-client';
 
 export default function LoginPage() {
   const router = useRouter();
+  
+  const loginMutation = useAuthControllerLogin({
+    mutation: {
+      onSuccess: (response: any) => {
+        // Store tokens
+        setAuthTokens(response.accessToken, response.refreshToken);
+        
+        notifications.show({
+          title: 'Welcome back! 👋',
+          message: 'Successfully logged in',
+          color: 'green',
+        });
+        
+        // Redirect to dashboard
+        router.push('/dashboard');
+      },
+      onError: (error: unknown) => {
+        const apiError = error as ApiError;
+        notifications.show({
+          title: 'Login Failed',
+          message: apiError?.messages?.[0] || 'Invalid email or password',
+          color: 'red',
+        });
+      },
+    },
+  });
 
-  const handleLogin = async (credentials: { email: string; password: string }) => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-      const response = await fetch(`${apiUrl}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
-      }
-
-      const data = await response.json();
-      
-      // Store tokens
-      setAuthTokens(data.accessToken, data.refreshToken);
-
-      notifications.show({
-        title: 'Success!',
-        message: 'Logged in successfully',
-        color: 'green',
-      });
-
-      // Redirect to dashboard
-      router.push('/dashboard');
-    } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to login',
-        color: 'red',
-      });
-      throw error;
-    }
+  const handleLogin = async (credentials: LoginDtoDTO) => {
+    loginMutation.mutate({ data: credentials });
   };
 
   const handleForgotPassword = async (email: string) => {
@@ -80,6 +72,7 @@ export default function LoginPage() {
       onSignupClick={() => router.push('/signup')}
       onForgotPassword={handleForgotPassword}
       onSocialLogin={handleSocialLogin}
+      loading={loginMutation.isPending}
     />
   );
 }

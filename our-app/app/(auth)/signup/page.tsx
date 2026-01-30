@@ -4,6 +4,12 @@ import { useRouter } from 'next/navigation';
 import { Signup } from '@businesspro/auth-ui';
 import { notifications } from '@mantine/notifications';
 import { setAuthTokens } from '@/lib/auth';
+import { 
+  useAuthControllerRegister, 
+  RegisterDtoDTO, 
+  RegisterDtoDTOBusinessType,
+  ApiError 
+} from '@businesspro/api-client';
 
 const BUSINESS_TYPES = [
   { value: 'cafe', label: '☕ Cafe' },
@@ -18,6 +24,34 @@ const BUSINESS_TYPES = [
 
 export default function SignupPage() {
   const router = useRouter();
+  
+  const registerMutation = useAuthControllerRegister({
+    mutation: {
+      onSuccess: (response: any) => {
+        // Store tokens
+        setAuthTokens(response.accessToken, response.refreshToken);
+        
+        notifications.show({
+          title: 'Welcome to BusinessPro! 🎉',
+          message: 'Your account has been created successfully',
+          color: 'green',
+        });
+        
+        // Redirect to dashboard
+        router.push('/dashboard');
+      },
+      onError: (error: unknown) => {
+        const apiError = error as ApiError;
+        const errorMessage = apiError?.messages?.[0] || 'Failed to create account';
+        
+        notifications.show({
+          title: 'Signup Failed',
+          message: errorMessage,
+          color: 'red',
+        });
+      },
+    },
+  });
 
   const handleSignup = async (data: {
     email: string;
@@ -27,47 +61,16 @@ export default function SignupPage() {
     businessName?: string;
     goals?: string[];
   }) => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-      const response = await fetch(`${apiUrl}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          name: data.businessName || data.name,
-          businessType: data.businessType,
-        }),
-      });
+    const signupData: RegisterDtoDTO = {
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      businessName: data.businessName,
+      businessType: data.businessType as RegisterDtoDTOBusinessType,
+      goals: data.goals,
+    };
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Signup failed');
-      }
-
-      const result = await response.json();
-
-      // Store tokens
-      setAuthTokens(result.accessToken, result.refreshToken);
-
-      notifications.show({
-        title: 'Welcome! 🎉',
-        message: 'Your account has been created successfully',
-        color: 'green',
-      });
-
-      // Redirect to onboarding or dashboard
-      router.push('/dashboard');
-    } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to create account',
-        color: 'red',
-      });
-      throw error;
-    }
+    registerMutation.mutate({ data: signupData });
   };
 
   const handleSocialSignup = async (provider: 'google' | 'facebook') => {
@@ -85,6 +88,7 @@ export default function SignupPage() {
       onLoginClick={() => router.push('/login')}
       onSocialLogin={handleSocialSignup}
       businessTypes={BUSINESS_TYPES}
+      loading={registerMutation.isPending}
     />
   );
 }

@@ -32,6 +32,7 @@
     "migration:generate": "cd api && bun run migration:generate",
     "migration:run": "cd api && bun run migration:run",
     "migration:revert": "cd api && bun run migration:revert",
+    "generate:ui-client": "orval --config ./orval.config.ts",
     "clean": "bun run --filter \"*\" --parallel exec rm -rf node_modules dist .next coverage",
     "clean:install": "bun run clean && rm -rf node_modules && bun install"
   },
@@ -39,8 +40,13 @@
     "class-validator": "^0.14.3"
   },
   "devDependencies": {
+    "@mantine/core": "8.3.13",
+    "@mantine/form": "8.3.13",
+    "@mantine/hooks": "8.3.13",
+    "@mantine/notifications": "8.3.13",
     "@types/node": "^22.10.7",
     "concurrently": "^9.1.0",
+    "orval": "^7.3.0",
     "prettier": "^3.4.2",
     "typescript": "^5.7.3"
   },
