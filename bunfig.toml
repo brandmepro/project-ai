@@ -5,3 +5,7 @@ members = [
   "api", 
   "packages/*"
 ]
+
+[install]
+# Force all dependencies to root node_modules (no individual package node_modules)
+hoistingLimits = "workspaces"

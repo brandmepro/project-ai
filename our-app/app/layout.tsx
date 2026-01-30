@@ -2,8 +2,8 @@ import React from "react"
 import type { Metadata, Viewport } from 'next'
 import { Poppins } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { ColorSchemeScript, MantineProvider } from '@mantine/core'
-import { theme } from '@/lib/theme'
+import { ColorSchemeScript } from '@mantine/core'
+import { MantineProviders } from '@/components/providers/MantineProviders'
 import './globals.css'
 
 const poppins = Poppins({ 
@@ -54,9 +54,9 @@ export default function RootLayout({
         <ColorSchemeScript defaultColorScheme="light" />
       </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
-        <MantineProvider theme={theme} defaultColorScheme="light">
+        <MantineProviders>
           {children}
-        </MantineProvider>
+        </MantineProviders>
         <Analytics />
       </body>
     </html>

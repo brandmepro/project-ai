@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import '@mantine/core/styles.css';
+@import '@mantine/notifications/styles.css';
 
 @custom-variant dark (&:is(.dark *));
 

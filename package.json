@@ -13,8 +13,10 @@
     "dev:api": "bun --filter api start:dev",
     "dev:web": "bun --filter my-v0-project dev",
     "dev:ai": "bun --filter @businesspro/ai dev",
-    "build": "bun run --filter @businesspro/ai build && bun run --filter api build && bun run --filter my-v0-project build",
+    "dev:auth-ui": "bun --filter @businesspro/auth-ui dev",
+    "build": "bun run --filter @businesspro/ai build && bun run --filter @businesspro/auth-ui build && bun run --filter api build && bun run --filter my-v0-project build",
     "build:ai": "bun run --filter @businesspro/ai build",
+    "build:auth-ui": "bun run --filter @businesspro/auth-ui build",
     "build:api": "bun run --filter api build",
     "build:web": "bun run --filter my-v0-project build",
     "start": "bun run --filter api start:prod",
@@ -37,6 +39,7 @@
     "class-validator": "^0.14.3"
   },
   "devDependencies": {
+    "@types/node": "^22.10.7",
     "concurrently": "^9.1.0",
     "prettier": "^3.4.2",
     "typescript": "^5.7.3"

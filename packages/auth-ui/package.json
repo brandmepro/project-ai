@@ -1,0 +1,32 @@
+{
+  "name": "@businesspro/auth-ui",
+  "version": "1.0.0",
+  "description": "Reusable authentication UI components for Business Pro apps",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "auth",
+    "login",
+    "signup",
+    "react",
+    "mantine"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "@mantine/core": "^7.0.0",
+    "@mantine/hooks": "^7.0.0",
+    "@mantine/form": "^7.0.0",
+    "framer-motion": "^11.0.0",
+    "@tabler/icons-react": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "typescript": "^5.7.3"
+  }
+}
