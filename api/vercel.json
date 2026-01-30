@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "cd .. && bun install && bun run build:ai && cd api && bun run build",
   "builds": [
     {
       "src": "api/index.ts",
@@ -11,8 +12,5 @@
       "src": "/(.*)",
       "dest": "/api/index.ts"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
