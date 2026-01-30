@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { AIUserFeedback } from '../entities/ai-user-feedback.entity';
 import { AIUserPreference } from '../entities/ai-user-preference.entity';
 import { AIModel } from '../entities/ai-model.entity';
-import { FeedbackType, AITaskCategory } from '@businesspro/ai';
+import { FeedbackType, AITaskCategory } from '../types/ai-types';
 
 @Injectable()
 export class FeedbackService {

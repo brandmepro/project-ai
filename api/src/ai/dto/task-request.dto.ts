@@ -1,5 +1,5 @@
 import { IsEnum, IsString, IsOptional, IsNumber, Min, Max } from 'class-validator';
-import { AITaskCategory, AITaskPriority, AITaskComplexity } from '@businesspro/ai';
+import { AITaskCategory, AITaskPriority, AITaskComplexity } from '../types/ai-types';
 
 export class TaskRequestDto {
   @IsEnum(AITaskCategory)

@@ -1,24 +1,19 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  createAIGateway,
-  getAIGateway,
-  AIModel,
-  AIFeature,
-  GenerateIdeasRequest,
-  GenerateCaptionRequest,
-  GenerateHooksRequest,
-  GenerateHashtagsRequest,
-  AITaskRequest,
-  AITaskCategory,
-} from '@businesspro/ai';
+import { AITaskRequest, AITaskCategory } from './types/ai-types';
 import { AILog } from './entities/ai-log.entity';
 import { ModelSelectionService } from './services/model-selection.service';
 
+// Temporary DTOs
+class GenerateIdeasRequest { businessType: string; platforms: string[]; contentGoal: string; tone: string; language: string; visualStyle: string; context?: string; }
+class GenerateCaptionRequest { businessType: string; contentGoal: string; tone: string; language: string; context: string; }
+class GenerateHooksRequest { businessType: string; contentType: string; goal: string; language?: string; }
+class GenerateHashtagsRequest { caption: string; businessType: string; platform: string; language: string; }
+
 @Injectable()
-export class AIService implements OnModuleInit {
+export class AIService {
   constructor(
     private configService: ConfigService,
     @InjectRepository(AILog)
@@ -26,84 +21,32 @@ export class AIService implements OnModuleInit {
     private modelSelectionService: ModelSelectionService,
   ) {}
 
-  onModuleInit() {
-    const apiKey = this.configService.get<string>('ai.gatewayApiKey');
-    const baseURL = this.configService.get<string>('ai.gatewayBaseUrl');
-    
-    if (!apiKey) {
-      throw new Error('AI_GATEWAY_API_KEY is not configured');
-    }
-
-    createAIGateway(apiKey, baseURL);
-  }
-
   /**
    * NEW: Generate with intelligent task-based model selection
+   * TODO: Implement actual AI generation
    */
   async generateWithTask(userId: string, taskRequest: AITaskRequest) {
-    const gateway = getAIGateway();
-
-    // Step 1: Intelligently select the best model for this task
-    const modelSelection = await this.modelSelectionService.selectBestModel(
-      userId,
-      taskRequest,
-    );
-
-    console.log(`✨ Selected ${modelSelection.modelName} for task (${modelSelection.reason})`);
-
-    // Step 2: Generate using the selected model
-    const { data, metadata } = await gateway.generateJSON(
-      {
-        model: modelSelection.modelId as any,
-        feature: this.getCategoryFeature(taskRequest.category),
-        maxTokens: taskRequest.maxTokens || 1500,
-        temperature: taskRequest.temperature || 0.7,
-      },
-      taskRequest.prompt,
-      taskRequest.systemPrompt,
-    );
-
-    // Step 3: Log with enhanced metadata
-    const logId = await this.logAIUsage(
-      userId,
-      { ...metadata, ...modelSelection },
-      taskRequest,
-      data,
-      taskRequest.category,
-    );
-
+    // Temporary mock response
     return {
-      data,
+      data: { message: 'AI generation coming soon' },
       metadata: {
-        ...metadata,
-        modelSelection,
-        logId, // Frontend can use this for feedback
+        modelSelection: {
+          modelId: 'temp-model',
+          modelName: 'Temporary Model',
+          reason: 'AI service being set up'
+        }
       },
     };
-  }
-
-  /**
-   * Map category to legacy feature enum
-   */
-  private getCategoryFeature(category: AITaskCategory): AIFeature {
-    const map: Record<string, AIFeature> = {
-      [AITaskCategory.CONTENT_IDEAS]: AIFeature.GENERATE_IDEAS,
-      [AITaskCategory.CONTENT_CAPTION]: AIFeature.GENERATE_CAPTION,
-      [AITaskCategory.CONTENT_HOOKS]: AIFeature.GENERATE_HOOKS,
-      [AITaskCategory.CONTENT_HASHTAGS]: AIFeature.GENERATE_HASHTAGS,
-    };
-
-    return map[category] || AIFeature.GENERATE_CAPTION;
   }
 
   /**
    * Generate content ideas (5 storylines)
+   * TODO: Implement actual AI generation
    */
   async generateIdeas(
     userId: string,
     request: GenerateIdeasRequest,
   ) {
-    const gateway = getAIGateway();
     
     const systemPrompt = `You are a social media marketing expert for local businesses in India.
 Generate engaging, relevant content ideas that are culturally appropriate and trend-aware.
@@ -140,25 +83,14 @@ Respond with valid JSON in this format:
   ]
 }`;
 
-    const { data, metadata } = await gateway.generateJSON(
-      {
-        model: AIModel.HEAVY_MODEL,
-        feature: AIFeature.GENERATE_IDEAS,
-        maxTokens: 2000,
-        temperature: 0.8,
-      },
-      prompt,
-      systemPrompt,
-    );
-
-    // Log AI usage
-    await this.logAIUsage(userId, metadata, request, data);
-
+    // Temporary mock response
     return {
-      ideas: data.ideas,
+      ideas: [
+        { id: '1', title: 'Sample Idea 1', description: 'Coming soon', engagementScore: 85, tags: ['sample'], reasoning: 'AI being set up' }
+      ],
       metadata: {
-        model: metadata.model,
-        costBucket: metadata.costBucket,
+        model: 'temp-model',
+        costBucket: 'low',
         generatedAt: new Date(),
       },
     };
@@ -166,12 +98,12 @@ Respond with valid JSON in this format:
 
   /**
    * Generate caption for content
+   * TODO: Implement actual AI generation
    */
   async generateCaption(
     userId: string,
     request: GenerateCaptionRequest,
   ) {
-    const gateway = getAIGateway();
     
     const systemPrompt = `You are a social media copywriter expert for local businesses in India.
 Write engaging captions in a ${request.tone} tone and ${request.language} language.
@@ -194,37 +126,25 @@ Respond with valid JSON:
   "alternativeCaptions": ["alternative 1", "alternative 2"]
 }`;
 
-    const { data, metadata } = await gateway.generateJSON(
-      {
-        model: AIModel.LIGHT_MODEL,
-        feature: AIFeature.GENERATE_CAPTION,
-        maxTokens: 500,
-        temperature: 0.7,
-      },
-      prompt,
-      systemPrompt,
-    );
-
-    await this.logAIUsage(userId, metadata, request, data);
-
+    // Temporary mock response
     return {
-      caption: data.caption,
-      alternativeCaptions: data.alternativeCaptions || [],
+      caption: 'Sample caption - AI service being set up',
+      alternativeCaptions: ['Alternative 1', 'Alternative 2'],
       metadata: {
-        model: metadata.model,
-        costBucket: metadata.costBucket,
+        model: 'temp-model',
+        costBucket: 'low',
       },
     };
   }
 
   /**
    * Generate hooks (attention grabbers)
+   * TODO: Implement actual AI generation
    */
   async generateHooks(
     userId: string,
     request: GenerateHooksRequest,
   ) {
-    const gateway = getAIGateway();
     
     const systemPrompt = `You are an expert in creating viral social media hooks that grab attention.
 Generate hooks suitable for ${request.businessType} businesses in India.`;
@@ -245,36 +165,24 @@ Respond with valid JSON:
   "hooks": ["hook 1", "hook 2", "hook 3", "hook 4", "hook 5"]
 }`;
 
-    const { data, metadata } = await gateway.generateJSON(
-      {
-        model: AIModel.LIGHT_MODEL,
-        feature: AIFeature.GENERATE_HOOKS,
-        maxTokens: 300,
-        temperature: 0.8,
-      },
-      prompt,
-      systemPrompt,
-    );
-
-    await this.logAIUsage(userId, metadata, request, data);
-
+    // Temporary mock response
     return {
-      hooks: data.hooks || [],
+      hooks: ['Hook 1', 'Hook 2', 'Hook 3', 'Hook 4', 'Hook 5'],
       metadata: {
-        model: metadata.model,
-        costBucket: metadata.costBucket,
+        model: 'temp-model',
+        costBucket: 'low',
       },
     };
   }
 
   /**
    * Generate relevant hashtags
+   * TODO: Implement actual AI generation
    */
   async generateHashtags(
     userId: string,
     request: GenerateHashtagsRequest,
   ) {
-    const gateway = getAIGateway();
     
     const systemPrompt = `You are a social media SEO expert specializing in hashtag optimization for ${request.platform}.
 Generate relevant, trending, and niche hashtags for local businesses in India.`;
@@ -298,24 +206,12 @@ Respond with valid JSON:
 
 Do NOT include the # symbol in hashtags.`;
 
-    const { data, metadata } = await gateway.generateJSON(
-      {
-        model: AIModel.LIGHT_MODEL,
-        feature: AIFeature.GENERATE_HASHTAGS,
-        maxTokens: 200,
-        temperature: 0.5,
-      },
-      prompt,
-      systemPrompt,
-    );
-
-    await this.logAIUsage(userId, metadata, request, data);
-
+    // Temporary mock response
     return {
-      hashtags: data.hashtags || [],
+      hashtags: ['hashtag1', 'hashtag2', 'hashtag3', 'trending', 'business'],
       metadata: {
-        model: metadata.model,
-        costBucket: metadata.costBucket,
+        model: 'temp-model',
+        costBucket: 'low',
       },
     };
   }

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd .. && bun install && bun run build:ai && cd api && bun run build",
+  "buildCommand": "cd .. && bun install && cd api && bun run build",
   "builds": [
     {
       "src": "api/index.ts",

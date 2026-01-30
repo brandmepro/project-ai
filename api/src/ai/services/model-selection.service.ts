@@ -11,7 +11,7 @@ import {
   ModelSelectionResult,
   AIProvider,
   ModelCapability,
-} from '@businesspro/ai';
+} from '../types/ai-types';
 
 interface ModelScore {
   model: AIModel;

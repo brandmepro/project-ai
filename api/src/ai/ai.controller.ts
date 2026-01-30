@@ -7,13 +7,13 @@ import { ModelSelectionService } from './services/model-selection.service';
 import { FeedbackService } from './services/feedback.service';
 import { TaskRequestDto } from './dto/task-request.dto';
 import { FeedbackDto } from './dto/feedback.dto';
-import {
-  GenerateIdeasRequest,
-  GenerateCaptionRequest,
-  GenerateHooksRequest,
-  GenerateHashtagsRequest,
-  AITaskCategory,
-} from '@businesspro/ai';
+import { AITaskCategory } from './types/ai-types';
+
+// Temporary DTOs until we fix the AI gateway
+class GenerateIdeasRequest { businessType: string; platforms: string[]; contentGoal: string; tone: string; language: string; visualStyle: string; context?: string; }
+class GenerateCaptionRequest { businessType: string; contentGoal: string; tone: string; language: string; context: string; }
+class GenerateHooksRequest { businessType: string; contentType: string; goal: string; language?: string; }
+class GenerateHashtagsRequest { caption: string; businessType: string; platform: string; language: string; }
 
 @ApiTags('AI')
 @ApiBearerAuth()

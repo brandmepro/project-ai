@@ -26,7 +26,6 @@
     "migration:show": "npm run typeorm -- migration:show -d src/database/data-source.ts"
   },
   "dependencies": {
-    "@businesspro/ai": "workspace:*",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",

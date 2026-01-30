@@ -1,5 +1,5 @@
 import { IsEnum, IsString, IsOptional, IsNumber, Min, Max, IsUUID } from 'class-validator';
-import { FeedbackType, AITaskCategory } from '@businesspro/ai';
+import { FeedbackType, AITaskCategory } from '../types/ai-types';
 
 export class FeedbackDto {
   @IsUUID()
