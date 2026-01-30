@@ -8,6 +8,8 @@ export interface SignupData {
   password: string;
   name: string;
   businessType?: string;
+  businessName?: string;
+  goals?: string[];
 }
 
 export interface AuthCallbacks {
