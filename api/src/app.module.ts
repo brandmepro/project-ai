@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { AppController } from './app.controller';
 
 // Config
 import databaseConfig from './config/database.config';
@@ -52,6 +53,7 @@ import { PlatformsModule } from './platforms/platforms.module';
     DashboardModule,
     PlatformsModule,
   ],
+  controllers: [AppController],
   providers: [
     // Global JWT Guard - All routes protected by default
     // Use @Public() decorator to make routes public
