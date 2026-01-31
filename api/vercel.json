@@ -1,19 +1,16 @@
 {
   "version": 2,
-  "buildCommand": "cd .. && bun install && cd api && bun run build",
   "builds": [
     {
-      "src": "api/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["dist/**", "src/**", "package.json"]
-      }
+      "src": "src/main.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index.ts"
+      "dest": "src/main.ts",
+      "methods": ["GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE", "HEAD"]
     }
   ]
 }
