@@ -14,14 +14,6 @@ out/
 **/.turbo/
 
 # Environment files
-.env
-.env.local
-.env.*.local
-
-# Keep example files
-!.env.example
-!.env.production
-
 # OS files
 .DS_Store
 Thumbs.db
