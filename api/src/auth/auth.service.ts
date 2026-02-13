@@ -110,7 +110,7 @@ export class AuthService {
     return tokens;
   }
 
-  async logout(userId: string): Promise<void> {
+  async logout(userId: number): Promise<void> {
     // Revoke all active refresh tokens for this user
     await this.refreshTokenRepository.update(
       { userId, isRevoked: false },

@@ -20,7 +20,7 @@ export class ContentService {
 
   async create(
     createContentDto: CreateContentDto,
-    userId: string,
+    userId: number,
   ): Promise<Content> {
     const content = this.contentRepository.create({
       ...createContentDto,
@@ -30,7 +30,7 @@ export class ContentService {
   }
 
   async findAll(
-    userId: string,
+    userId: number,
     queryDto: QueryContentDto,
   ): Promise<{ data: Content[]; total: number; page: number; limit: number }> {
     const {
@@ -96,7 +96,7 @@ export class ContentService {
     };
   }
 
-  async findOne(id: string, userId: string): Promise<Content> {
+  async findOne(id: string, userId: number): Promise<Content> {
     const content = await this.contentRepository.findOne({
       where: { id, userId },
     });
@@ -110,7 +110,7 @@ export class ContentService {
 
   async update(
     id: string,
-    userId: string,
+    userId: number,
     updateContentDto: UpdateContentDto,
   ): Promise<Content> {
     const content = await this.findOne(id, userId);
@@ -120,12 +120,12 @@ export class ContentService {
     return this.contentRepository.save(content);
   }
 
-  async remove(id: string, userId: string): Promise<void> {
+  async remove(id: string, userId: number): Promise<void> {
     const content = await this.findOne(id, userId);
     await this.contentRepository.softRemove(content);
   }
 
-  async duplicate(id: string, userId: string): Promise<Content> {
+  async duplicate(id: string, userId: number): Promise<Content> {
     const original = await this.findOne(id, userId);
 
     const duplicate = this.contentRepository.create({
@@ -141,7 +141,7 @@ export class ContentService {
     return this.contentRepository.save(duplicate);
   }
 
-  async publish(id: string, userId: string): Promise<Content> {
+  async publish(id: string, userId: number): Promise<Content> {
     const content = await this.findOne(id, userId);
 
     content.status = ContentStatus.PUBLISHED;
@@ -152,7 +152,7 @@ export class ContentService {
 
   async reschedule(
     id: string,
-    userId: string,
+    userId: number,
     scheduledFor: Date,
   ): Promise<Content> {
     const content = await this.findOne(id, userId);
@@ -163,7 +163,7 @@ export class ContentService {
     return this.contentRepository.save(content);
   }
 
-  async getRecentContent(userId: string, limit = 4): Promise<Content[]> {
+  async getRecentContent(userId: number, limit = 4): Promise<Content[]> {
     return this.contentRepository.find({
       where: { userId },
       order: { createdAt: 'DESC' },
@@ -172,7 +172,7 @@ export class ContentService {
   }
 
   async getScheduledContent(
-    userId: string,
+    userId: number,
     startDate: Date,
     endDate: Date,
   ): Promise<Content[]> {
@@ -186,7 +186,7 @@ export class ContentService {
     });
   }
 
-  async getContentStats(userId: string): Promise<{
+  async getContentStats(userId: number): Promise<{
     total: number;
     draft: number;
     scheduled: number;

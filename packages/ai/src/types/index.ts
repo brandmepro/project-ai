@@ -35,9 +35,10 @@ export enum AIFeature {
 
 /**
  * AI Request Configuration
+ * Note: model can be either AIModel enum OR string model ID (e.g., "openai:gpt-4o", "google:gemini-2.5-flash")
  */
 export interface AIRequestConfig {
-  model: AIModel;
+  model: AIModel | string;
   feature: AIFeature;
   maxTokens?: number;
   temperature?: number;
@@ -48,7 +49,7 @@ export interface AIRequestConfig {
  * AI Response Metadata
  */
 export interface AIResponseMetadata {
-  model: AIModel;
+  model: AIModel | string;
   feature: AIFeature;
   costBucket: CostBucket;
   promptTokens?: number;

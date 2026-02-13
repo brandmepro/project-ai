@@ -11,7 +11,7 @@ export class PlatformsService {
     private platformRepository: Repository<PlatformConnection>,
   ) {}
 
-  async getAllConnections(userId: string): Promise<any[]> {
+  async getAllConnections(userId: number): Promise<any[]> {
     // Get all existing connections from DB
     const existingConnections = await this.platformRepository.find({
       where: { userId },
@@ -44,7 +44,7 @@ export class PlatformsService {
     });
   }
 
-  async getConnectionStatus(userId: string, platform: Platform) {
+  async getConnectionStatus(userId: number, platform: Platform) {
     const connection = await this.platformRepository.findOne({
       where: { userId, platform },
     });
@@ -58,7 +58,7 @@ export class PlatformsService {
   }
 
   async connect(
-    userId: string,
+    userId: number,
     platform: Platform,
     accessToken: string,
     refreshToken?: string,
@@ -92,7 +92,7 @@ export class PlatformsService {
     return this.platformRepository.save(connection);
   }
 
-  async disconnect(userId: string, platform: Platform): Promise<void> {
+  async disconnect(userId: number, platform: Platform): Promise<void> {
     const connection = await this.platformRepository.findOne({
       where: { userId, platform },
     });
@@ -111,7 +111,7 @@ export class PlatformsService {
     await this.platformRepository.save(connection);
   }
 
-  async getConnectedPlatforms(userId: string): Promise<string[]> {
+  async getConnectedPlatforms(userId: number): Promise<string[]> {
     const connections = await this.platformRepository.find({
       where: { userId, isConnected: true },
     });

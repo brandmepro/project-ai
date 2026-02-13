@@ -10,11 +10,13 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { BusinessType } from '../../common/enums';
+import { Settings } from '../../settings/entities/settings.entity';
+import { NotificationSettings } from '../../notifications/entities/notification-settings.entity';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ unique: true })
   email: string;
@@ -46,6 +48,9 @@ export class User {
   @Column({ type: 'varchar', nullable: true, name: 'avatar_url' })
   avatarUrl: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  phone: string;
+
   @Column({
     type: 'varchar',
     default: 'free',
@@ -53,173 +58,12 @@ export class User {
   })
   subscriptionPlan: string;
 
-  @Column({
-    type: 'jsonb',
-    default: {
-      language: 'english',
-      tone: 'friendly',
-      autoSave: true,
-      darkMode: false,
-    },
-    name: 'preferences',
-  })
-  preferences: {
-    language?: string;
-    tone?: string;
-    autoSave?: boolean;
-    darkMode?: boolean;
-  };
+  // Relationships to dedicated tables
+  @OneToOne(() => Settings, settings => settings.user, { eager: true, cascade: true })
+  settings: Settings;
 
-  @Column({
-    type: 'jsonb',
-    default: {
-      email: true,
-      push: true,
-      contentReady: true,
-      weeklyReport: true,
-      aiSuggestions: true,
-    },
-    name: 'notification_settings',
-  })
-  notificationSettings: {
-    email?: boolean;
-    push?: boolean;
-    contentReady?: boolean;
-    weeklyReport?: boolean;
-    aiSuggestions?: boolean;
-  };
-
-  @Column({
-    type: 'jsonb',
-    default: {
-      aiPriority: 'balanced',
-      autoEnhance: true,
-      smartHashtags: true,
-      contentNotifications: true,
-      experimentalFeatures: false,
-      visualStyle: 'clean',
-      captionLength: 'medium',
-      emojiUsage: 'moderate',
-    },
-    name: 'ai_settings',
-  })
-  aiSettings: {
-    aiPriority?: string;
-    autoEnhance?: boolean;
-    smartHashtags?: boolean;
-    contentNotifications?: boolean;
-    experimentalFeatures?: boolean;
-    visualStyle?: string;
-    captionLength?: string;
-    emojiUsage?: string;
-  };
-
-  @Column({
-    type: 'jsonb',
-    default: {
-      autoScheduling: true,
-      optimizeTiming: true,
-      minBuffer: 2,
-      maxPostsPerDay: 3,
-      postingSchedule: {
-        monday: ['09:00', '14:00', '19:00'],
-        tuesday: ['09:00', '14:00', '19:00'],
-        wednesday: ['09:00', '14:00', '19:00'],
-        thursday: ['09:00', '14:00', '19:00'],
-        friday: ['09:00', '14:00', '19:00'],
-        saturday: ['11:00', '17:00'],
-        sunday: ['11:00', '17:00'],
-      },
-    },
-    name: 'scheduling_settings',
-  })
-  schedulingSettings: {
-    autoScheduling?: boolean;
-    optimizeTiming?: boolean;
-    minBuffer?: number;
-    maxPostsPerDay?: number;
-    postingSchedule?: Record<string, string[]>;
-  };
-
-  @Column({
-    type: 'jsonb',
-    default: {
-      weeklyReportDay: 'monday',
-      includeReach: true,
-      includeEngagement: true,
-      includeGrowth: true,
-      includeTopPosts: true,
-      trackClicks: true,
-      trackVisits: true,
-      trackDemographics: false,
-    },
-    name: 'analytics_settings',
-  })
-  analyticsSettings: {
-    weeklyReportDay?: string;
-    includeReach?: boolean;
-    includeEngagement?: boolean;
-    includeGrowth?: boolean;
-    includeTopPosts?: boolean;
-    trackClicks?: boolean;
-    trackVisits?: boolean;
-    trackDemographics?: boolean;
-  };
-
-  @Column({
-    type: 'jsonb',
-    default: {
-      storeDrafts: true,
-      cacheContent: true,
-      analyticsCollection: true,
-      profileVisibility: 'public',
-      shareAnalytics: 'team',
-    },
-    name: 'privacy_settings',
-  })
-  privacySettings: {
-    storeDrafts?: boolean;
-    cacheContent?: boolean;
-    analyticsCollection?: boolean;
-    profileVisibility?: string;
-    shareAnalytics?: string;
-  };
-
-  @Column({
-    type: 'jsonb',
-    default: {
-      debugMode: false,
-      apiLogs: false,
-      betaFeatures: false,
-      aiModelTesting: false,
-      imageQuality: 'high',
-      cacheDuration: 7,
-    },
-    name: 'advanced_settings',
-  })
-  advancedSettings: {
-    debugMode?: boolean;
-    apiLogs?: boolean;
-    betaFeatures?: boolean;
-    aiModelTesting?: boolean;
-    imageQuality?: string;
-    cacheDuration?: number;
-  };
-
-  @Column({
-    type: 'jsonb',
-    default: {
-      autoCrosspost: true,
-      platformOptimizations: true,
-      tagLocation: false,
-    },
-    name: 'platform_preferences',
-  })
-  platformPreferences: {
-    autoCrosspost?: boolean;
-    platformOptimizations?: boolean;
-    tagLocation?: boolean;
-  };
+  @OneToOne(() => NotificationSettings, notificationSettings => notificationSettings.user, { eager: true, cascade: true })
+  notificationSettings: NotificationSettings;
 
   @Column({ default: false, name: 'two_factor_enabled' })
   twoFactorEnabled: boolean;

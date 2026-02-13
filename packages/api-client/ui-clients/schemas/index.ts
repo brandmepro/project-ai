@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './aIControllerGetAnalyticsParams';
 export * from './aIControllerGetSuggestionsParams';
 export * from './analyticsControllerGetEngagementParams';
 export * from './analyticsControllerGetEngagementRange';

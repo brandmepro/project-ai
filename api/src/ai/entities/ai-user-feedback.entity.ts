@@ -16,7 +16,7 @@ export class AIUserFeedback {
   id: string;
 
   @Column({ type: 'uuid', nullable: true, name: 'user_id' })
-  userId: string;
+  userId: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

@@ -24,7 +24,7 @@ export class DashboardController {
     description:
       'Dashboard stats including content stats, overview metrics, and recent content',
   })
-  async getStats(@CurrentUser('id') userId: string) {
+  async getStats(@CurrentUser('id') userId: number) {
     return this.dashboardService.getDashboardStats(userId);
   }
 
@@ -36,7 +36,7 @@ export class DashboardController {
     description: 'Recent content items',
   })
   async getRecent(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.dashboardService.getRecentContent(userId, limit);

@@ -56,7 +56,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated' })
   async updateProfile(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updates: { name?: string; businessType?: BusinessType },
   ) {
     return this.usersService.updateProfile(userId, updates);
@@ -66,7 +66,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update business profile' })
   @ApiResponse({ status: 200, description: 'Business profile updated' })
   async updateBusinessProfile(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateDto: UpdateBusinessProfileDto,
   ) {
     return this.usersService.updateBusinessProfile(userId, updateDto);
@@ -75,7 +75,7 @@ export class UsersController {
   @Get('preferences')
   @ApiOperation({ summary: 'Get user preferences' })
   @ApiResponse({ status: 200, description: 'Preferences returned' })
-  async getPreferences(@CurrentUser('id') userId: string) {
+  async getPreferences(@CurrentUser('id') userId: number) {
     return this.usersService.getPreferences(userId);
   }
 
@@ -83,7 +83,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update user preferences' })
   @ApiResponse({ status: 200, description: 'Preferences updated' })
   async updatePreferences(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateDto: UpdatePreferencesDto,
   ) {
     return this.usersService.updatePreferences(userId, updateDto);
@@ -92,7 +92,7 @@ export class UsersController {
   @Get('notifications')
   @ApiOperation({ summary: 'Get notification settings' })
   @ApiResponse({ status: 200, description: 'Notification settings returned' })
-  async getNotifications(@CurrentUser('id') userId: string) {
+  async getNotifications(@CurrentUser('id') userId: number) {
     return this.usersService.getNotificationSettings(userId);
   }
 
@@ -100,7 +100,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update notification settings' })
   @ApiResponse({ status: 200, description: 'Notification settings updated' })
   async updateNotifications(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateDto: UpdateNotificationsDto,
   ) {
     return this.usersService.updateNotifications(userId, updateDto);
@@ -110,7 +110,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Change password' })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
   async changePassword(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     await this.usersService.changePassword(
@@ -125,7 +125,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Upload profile avatar' })
   @ApiResponse({ status: 200, description: 'Avatar uploaded successfully' })
   async uploadAvatar(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body('avatarUrl') avatarUrl: string,
   ) {
     return this.usersService.updateAvatar(userId, avatarUrl);
@@ -135,7 +135,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Enable two-factor authentication' })
   @ApiResponse({ status: 200, description: '2FA enabled successfully' })
   async enable2FA(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body('secret') secret: string,
   ) {
     return this.usersService.enable2FA(userId, secret);
@@ -144,14 +144,14 @@ export class UsersController {
   @Post('2fa/disable')
   @ApiOperation({ summary: 'Disable two-factor authentication' })
   @ApiResponse({ status: 200, description: '2FA disabled successfully' })
-  async disable2FA(@CurrentUser('id') userId: string) {
+  async disable2FA(@CurrentUser('id') userId: number) {
     return this.usersService.disable2FA(userId);
   }
 
   @Delete('account')
   @ApiOperation({ summary: 'Delete user account' })
   @ApiResponse({ status: 200, description: 'Account deleted' })
-  async deleteAccount(@CurrentUser('id') userId: string) {
+  async deleteAccount(@CurrentUser('id') userId: number) {
     await this.usersService.deleteAccount(userId);
     return { message: 'Account deleted successfully' };
   }
@@ -160,7 +160,7 @@ export class UsersController {
   @Get('settings/ai')
   @ApiOperation({ summary: 'Get AI settings' })
   @ApiResponse({ status: 200, description: 'AI settings returned' })
-  async getAiSettings(@CurrentUser('id') userId: string) {
+  async getAiSettings(@CurrentUser('id') userId: number) {
     return this.usersService.getAiSettings(userId);
   }
 
@@ -168,7 +168,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update AI settings' })
   @ApiResponse({ status: 200, description: 'AI settings updated' })
   async updateAiSettings(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateDto: UpdateAiSettingsDto,
   ) {
     return this.usersService.updateAiSettings(userId, updateDto);
@@ -178,7 +178,7 @@ export class UsersController {
   @Get('settings/scheduling')
   @ApiOperation({ summary: 'Get scheduling settings' })
   @ApiResponse({ status: 200, description: 'Scheduling settings returned' })
-  async getSchedulingSettings(@CurrentUser('id') userId: string) {
+  async getSchedulingSettings(@CurrentUser('id') userId: number) {
     return this.usersService.getSchedulingSettings(userId);
   }
 
@@ -186,7 +186,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update scheduling settings' })
   @ApiResponse({ status: 200, description: 'Scheduling settings updated' })
   async updateSchedulingSettings(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateDto: UpdateSchedulingSettingsDto,
   ) {
     return this.usersService.updateSchedulingSettings(userId, updateDto);
@@ -196,7 +196,7 @@ export class UsersController {
   @Get('settings/analytics')
   @ApiOperation({ summary: 'Get analytics settings' })
   @ApiResponse({ status: 200, description: 'Analytics settings returned' })
-  async getAnalyticsSettings(@CurrentUser('id') userId: string) {
+  async getAnalyticsSettings(@CurrentUser('id') userId: number) {
     return this.usersService.getAnalyticsSettings(userId);
   }
 
@@ -204,7 +204,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update analytics settings' })
   @ApiResponse({ status: 200, description: 'Analytics settings updated' })
   async updateAnalyticsSettings(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateDto: UpdateAnalyticsSettingsDto,
   ) {
     return this.usersService.updateAnalyticsSettings(userId, updateDto);
@@ -214,7 +214,7 @@ export class UsersController {
   @Get('settings/privacy')
   @ApiOperation({ summary: 'Get privacy settings' })
   @ApiResponse({ status: 200, description: 'Privacy settings returned' })
-  async getPrivacySettings(@CurrentUser('id') userId: string) {
+  async getPrivacySettings(@CurrentUser('id') userId: number) {
     return this.usersService.getPrivacySettings(userId);
   }
 
@@ -222,7 +222,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update privacy settings' })
   @ApiResponse({ status: 200, description: 'Privacy settings updated' })
   async updatePrivacySettings(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateDto: UpdatePrivacySettingsDto,
   ) {
     return this.usersService.updatePrivacySettings(userId, updateDto);
@@ -232,7 +232,7 @@ export class UsersController {
   @Get('settings/advanced')
   @ApiOperation({ summary: 'Get advanced settings' })
   @ApiResponse({ status: 200, description: 'Advanced settings returned' })
-  async getAdvancedSettings(@CurrentUser('id') userId: string) {
+  async getAdvancedSettings(@CurrentUser('id') userId: number) {
     return this.usersService.getAdvancedSettings(userId);
   }
 
@@ -240,7 +240,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update advanced settings' })
   @ApiResponse({ status: 200, description: 'Advanced settings updated' })
   async updateAdvancedSettings(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateDto: UpdateAdvancedSettingsDto,
   ) {
     return this.usersService.updateAdvancedSettings(userId, updateDto);
@@ -250,7 +250,7 @@ export class UsersController {
   @Get('settings/platforms')
   @ApiOperation({ summary: 'Get platform preferences' })
   @ApiResponse({ status: 200, description: 'Platform preferences returned' })
-  async getPlatformPreferences(@CurrentUser('id') userId: string) {
+  async getPlatformPreferences(@CurrentUser('id') userId: number) {
     return this.usersService.getPlatformPreferences(userId);
   }
 
@@ -258,7 +258,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update platform preferences' })
   @ApiResponse({ status: 200, description: 'Platform preferences updated' })
   async updatePlatformPreferences(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateDto: UpdatePlatformPreferencesDto,
   ) {
     return this.usersService.updatePlatformPreferences(userId, updateDto);
@@ -268,7 +268,7 @@ export class UsersController {
   @Post('settings/reset')
   @ApiOperation({ summary: 'Reset all settings to defaults' })
   @ApiResponse({ status: 200, description: 'Settings reset successfully' })
-  async resetAllSettings(@CurrentUser('id') userId: string) {
+  async resetAllSettings(@CurrentUser('id') userId: number) {
     await this.usersService.resetAllSettings(userId);
     return { message: 'All settings have been reset to defaults' };
   }

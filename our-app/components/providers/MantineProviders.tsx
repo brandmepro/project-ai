@@ -7,14 +7,16 @@ import { theme } from '@/lib/theme';
 import { useState } from 'react';
 
 export function MantineProviders({ children }: { children: React.ReactNode }) {
-  // Create QueryClient with optimal defaults for idempotency
+  // Create QueryClient with optimized defaults for performance
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Consider data fresh for 5 seconds to prevent unnecessary refetches
-            staleTime: 5000,
+            // User/Settings data: fresh for 30 seconds (changes infrequently)
+            staleTime: 30 * 1000,
+            // Cache data for 5 minutes
+            gcTime: 5 * 60 * 1000,
             // Retry failed requests, but NOT for auth errors
             retry: (failureCount, error: any) => {
               // Don't retry on 401 (unauthorized) or 403 (forbidden)
@@ -30,10 +32,12 @@ export function MantineProviders({ children }: { children: React.ReactNode }) {
             },
             // Retry delay with exponential backoff
             retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-            // Don't refetch on window focus by default (can be enabled per query)
+            // Don't refetch on window focus (use manual invalidation instead)
             refetchOnWindowFocus: false,
-            // Refetch on mount only if data is stale
-            refetchOnMount: 'always',
+            // Only refetch on mount if data is stale
+            refetchOnMount: true,
+            // Refetch interval disabled (use websockets/polling per query if needed)
+            refetchInterval: false,
           },
           mutations: {
             // Don't retry mutations on auth errors

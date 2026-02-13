@@ -38,23 +38,53 @@ export class AIModel {
   @Column({ default: false, name: 'supports_vision' })
   supportsVision: boolean;
 
+  @Column({ default: false, name: 'supports_image_gen' })
+  supportsImageGen: boolean;
+
+  @Column({ default: false, name: 'supports_video_gen' })
+  supportsVideoGen: boolean;
+
+  @Column({ default: false, name: 'supports_web_search' })
+  supportsWebSearch: boolean;
+
   @Column({ type: 'int', nullable: true, name: 'max_tokens' })
   maxTokens: number;
 
   @Column({ type: 'int', nullable: true, name: 'context_window' })
   contextWindow: number;
 
-  @Column({ type: 'int', nullable: true, name: 'average_speed_ms' })
-  averageSpeedMs: number;
+  @Column({ type: 'text', array: true, default: [], name: 'available_providers' })
+  availableProviders: string[];
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, name: 'latency_ms' })
+  latencyMs: number;
+
+  @Column({ type: 'int', nullable: true, name: 'throughput_tps' })
+  throughputTps: number;
 
   @Column({ name: 'cost_bucket' })
   costBucket: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true, name: 'cost_per_1k_input' })
-  costPer1kInput: number;
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true, name: 'cost_per_1m_input' })
+  costPer1mInput: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true, name: 'cost_per_1k_output' })
-  costPer1kOutput: number;
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true, name: 'cost_per_1m_output' })
+  costPer1mOutput: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true, name: 'cache_read_cost_per_1m' })
+  cacheReadCostPer1m: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true, name: 'cache_write_cost_per_1m' })
+  cacheWriteCostPer1m: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true, name: 'image_gen_cost' })
+  imageGenCost: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true, name: 'video_gen_cost' })
+  videoGenCost: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true, name: 'web_search_cost' })
+  webSearchCost: number;
 
   @Column({ type: 'decimal', precision: 3, scale: 2, nullable: true, name: 'overall_quality_score' })
   overallQualityScore: number;

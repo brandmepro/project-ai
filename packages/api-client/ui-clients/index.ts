@@ -27,4 +27,5 @@ export * from './dashboard/dashboard';
 export * from './health/health';
 export * from './platforms/platforms';
 export * from './schemas';
+export * from './subscriptions/subscriptions';
 export * from './users/users';

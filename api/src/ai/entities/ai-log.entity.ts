@@ -11,18 +11,18 @@ import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('ai_logs')
 export class AILog {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ type: 'uuid', nullable: true, name: 'user_id' })
-  userId: string;
+  @Column({ type: 'integer', nullable: false, name: 'user_id' })
+  userId: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'uuid', nullable: true, name: 'organization_id' })
-  organizationId: string;
+  @Column({ type: 'integer', nullable: true, name: 'organization_id' })
+  organizationId: number;
 
   @ManyToOne(() => Organization)
   @JoinColumn({ name: 'organization_id' })

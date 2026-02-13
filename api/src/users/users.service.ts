@@ -7,6 +7,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { Settings } from '../settings/entities/settings.entity';
+import { NotificationSettings } from '../notifications/entities/notification-settings.entity';
 import * as bcrypt from 'bcrypt';
 import { BusinessType } from '../common/enums';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
@@ -24,6 +26,10 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Settings)
+    private settingsRepository: Repository<Settings>,
+    @InjectRepository(NotificationSettings)
+    private notificationSettingsRepository: Repository<NotificationSettings>,
   ) {}
 
   async create(
@@ -44,6 +50,7 @@ export class UsersService {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // Create user
     const user = this.usersRepository.create({
       email,
       passwordHash,
@@ -53,7 +60,22 @@ export class UsersService {
       contentGoals: goals || [],
     });
 
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+
+    // Create default settings
+    const settings = this.settingsRepository.create({
+      userId: savedUser.id,
+    });
+    await this.settingsRepository.save(settings);
+
+    // Create default notification settings
+    const notificationSettings = this.notificationSettingsRepository.create({
+      userId: savedUser.id,
+    });
+    await this.notificationSettingsRepository.save(notificationSettings);
+
+    // Return user with relations
+    return this.findById(savedUser.id);
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -62,20 +84,21 @@ export class UsersService {
     });
   }
 
-  async findById(id: string): Promise<User | null> {
+  async findById(id: number): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { id },
+      relations: ['settings', 'notificationSettings'],
     });
   }
 
-  async updateLastLogin(userId: string): Promise<void> {
+  async updateLastLogin(userId: number): Promise<void> {
     await this.usersRepository.update(userId, {
       lastLoginAt: new Date(),
     });
   }
 
   async updateProfile(
-    userId: string,
+    userId: number,
     updates: Partial<Pick<User, 'name' | 'businessType'>>,
   ): Promise<User> {
     const user = await this.findById(userId);
@@ -88,7 +111,7 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async deleteAccount(userId: string): Promise<void> {
+  async deleteAccount(userId: number): Promise<void> {
     const result = await this.usersRepository.softDelete(userId);
     
     if (result.affected === 0) {
@@ -101,7 +124,7 @@ export class UsersService {
   }
 
   async updateBusinessProfile(
-    userId: string,
+    userId: number,
     updateDto: UpdateBusinessProfileDto,
   ): Promise<User> {
     const user = await this.findById(userId);
@@ -124,7 +147,7 @@ export class UsersService {
   }
 
   async updatePreferences(
-    userId: string,
+    userId: number,
     updateDto: UpdatePreferencesDto,
   ): Promise<User> {
     const user = await this.findById(userId);
@@ -133,16 +156,19 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    user.preferences = {
-      ...user.preferences,
-      ...updateDto,
-    };
+    if (!user.settings) {
+      throw new NotFoundException('User settings not found');
+    }
 
-    return this.usersRepository.save(user);
+    // Update settings entity
+    Object.assign(user.settings, updateDto);
+    await this.settingsRepository.save(user.settings);
+
+    return this.findById(userId);
   }
 
   async updateNotifications(
-    userId: string,
+    userId: number,
     updateDto: UpdateNotificationsDto,
   ): Promise<User> {
     const user = await this.findById(userId);
@@ -151,16 +177,19 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    user.notificationSettings = {
-      ...user.notificationSettings,
-      ...updateDto,
-    };
+    if (!user.notificationSettings) {
+      throw new NotFoundException('User notification settings not found');
+    }
 
-    return this.usersRepository.save(user);
+    // Update notification settings entity
+    Object.assign(user.notificationSettings, updateDto);
+    await this.notificationSettingsRepository.save(user.notificationSettings);
+
+    return this.findById(userId);
   }
 
   async changePassword(
-    userId: string,
+    userId: number,
     currentPassword: string,
     newPassword: string,
   ): Promise<void> {
@@ -179,7 +208,7 @@ export class UsersService {
     await this.usersRepository.save(user);
   }
 
-  async updateAvatar(userId: string, avatarUrl: string): Promise<User> {
+  async updateAvatar(userId: number, avatarUrl: string): Promise<User> {
     const user = await this.findById(userId);
 
     if (!user) {
@@ -190,7 +219,7 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async enable2FA(userId: string, secret: string): Promise<User> {
+  async enable2FA(userId: number, secret: string): Promise<User> {
     const user = await this.findById(userId);
 
     if (!user) {
@@ -202,7 +231,7 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async disable2FA(userId: string): Promise<User> {
+  async disable2FA(userId: number): Promise<User> {
     const user = await this.findById(userId);
 
     if (!user) {
@@ -214,17 +243,17 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async getPreferences(userId: string) {
+  async getPreferences(userId: number) {
     const user = await this.findById(userId);
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return user.preferences;
+    return user.settings;
   }
 
-  async getNotificationSettings(userId: string) {
+  async getNotificationSettings(userId: number) {
     const user = await this.findById(userId);
 
     if (!user) {
@@ -237,7 +266,7 @@ export class UsersService {
   /**
    * Update password without requiring current password (used for OTP-based password reset)
    */
-  async updatePassword(userId: string, newPassword: string): Promise<void> {
+  async updatePassword(userId: number, newPassword: string): Promise<void> {
     const user = await this.findById(userId);
 
     if (!user) {
@@ -249,244 +278,166 @@ export class UsersService {
   }
 
   // AI Settings
-  async getAiSettings(userId: string) {
+  async getAiSettings(userId: number) {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user.aiSettings;
+    return user.settings;
   }
 
   async updateAiSettings(
-    userId: string,
+    userId: number,
     updateDto: UpdateAiSettingsDto,
   ): Promise<User> {
     const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!user || !user.settings) {
+      throw new NotFoundException('User or settings not found');
     }
 
-    user.aiSettings = {
-      ...user.aiSettings,
-      ...updateDto,
-    };
+    Object.assign(user.settings, updateDto);
+    await this.settingsRepository.save(user.settings);
 
-    return this.usersRepository.save(user);
+    return this.findById(userId);
   }
 
   // Scheduling Settings
-  async getSchedulingSettings(userId: string) {
+  async getSchedulingSettings(userId: number) {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user.schedulingSettings;
+    return user.settings;
   }
 
   async updateSchedulingSettings(
-    userId: string,
+    userId: number,
     updateDto: UpdateSchedulingSettingsDto,
   ): Promise<User> {
     const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!user || !user.settings) {
+      throw new NotFoundException('User or settings not found');
     }
 
-    user.schedulingSettings = {
-      ...user.schedulingSettings,
-      ...updateDto,
-    };
+    Object.assign(user.settings, updateDto);
+    await this.settingsRepository.save(user.settings);
 
-    return this.usersRepository.save(user);
+    return this.findById(userId);
   }
 
   // Analytics Settings
-  async getAnalyticsSettings(userId: string) {
+  async getAnalyticsSettings(userId: number) {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user.analyticsSettings;
+    return user.settings;
   }
 
   async updateAnalyticsSettings(
-    userId: string,
+    userId: number,
     updateDto: UpdateAnalyticsSettingsDto,
   ): Promise<User> {
     const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!user || !user.settings) {
+      throw new NotFoundException('User or settings not found');
     }
 
-    user.analyticsSettings = {
-      ...user.analyticsSettings,
-      ...updateDto,
-    };
+    Object.assign(user.settings, updateDto);
+    await this.settingsRepository.save(user.settings);
 
-    return this.usersRepository.save(user);
+    return this.findById(userId);
   }
 
   // Privacy Settings
-  async getPrivacySettings(userId: string) {
+  async getPrivacySettings(userId: number) {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user.privacySettings;
+    return user.settings;
   }
 
   async updatePrivacySettings(
-    userId: string,
+    userId: number,
     updateDto: UpdatePrivacySettingsDto,
   ): Promise<User> {
     const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!user || !user.settings) {
+      throw new NotFoundException('User or settings not found');
     }
 
-    user.privacySettings = {
-      ...user.privacySettings,
-      ...updateDto,
-    };
+    Object.assign(user.settings, updateDto);
+    await this.settingsRepository.save(user.settings);
 
-    return this.usersRepository.save(user);
+    return this.findById(userId);
   }
 
   // Advanced Settings
-  async getAdvancedSettings(userId: string) {
+  async getAdvancedSettings(userId: number) {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user.advancedSettings;
+    return user.settings;
   }
 
   async updateAdvancedSettings(
-    userId: string,
+    userId: number,
     updateDto: UpdateAdvancedSettingsDto,
   ): Promise<User> {
     const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!user || !user.settings) {
+      throw new NotFoundException('User or settings not found');
     }
 
-    user.advancedSettings = {
-      ...user.advancedSettings,
-      ...updateDto,
-    };
+    Object.assign(user.settings, updateDto);
+    await this.settingsRepository.save(user.settings);
 
-    return this.usersRepository.save(user);
+    return this.findById(userId);
   }
 
   // Reset all settings to defaults
-  async resetAllSettings(userId: string): Promise<void> {
+  async resetAllSettings(userId: number): Promise<void> {
     const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!user || !user.settings || !user.notificationSettings) {
+      throw new NotFoundException('User or settings not found');
     }
 
-    user.preferences = {
-      language: 'english',
-      tone: 'friendly',
-      autoSave: true,
-      darkMode: false,
-    };
+    // Reset settings to defaults
+    const defaultSettings = this.settingsRepository.create({
+      userId: user.id,
+    });
+    Object.assign(user.settings, defaultSettings);
+    await this.settingsRepository.save(user.settings);
 
-    user.notificationSettings = {
-      email: true,
-      push: true,
-      contentReady: true,
-      weeklyReport: true,
-      aiSuggestions: true,
-    };
-
-    user.aiSettings = {
-      aiPriority: 'balanced',
-      autoEnhance: true,
-      smartHashtags: true,
-      contentNotifications: true,
-      experimentalFeatures: false,
-      visualStyle: 'clean',
-      captionLength: 'medium',
-      emojiUsage: 'moderate',
-    };
-
-    user.schedulingSettings = {
-      autoScheduling: true,
-      optimizeTiming: true,
-      minBuffer: 2,
-      maxPostsPerDay: 3,
-      postingSchedule: {
-        monday: ['09:00', '14:00', '19:00'],
-        tuesday: ['09:00', '14:00', '19:00'],
-        wednesday: ['09:00', '14:00', '19:00'],
-        thursday: ['09:00', '14:00', '19:00'],
-        friday: ['09:00', '14:00', '19:00'],
-        saturday: ['11:00', '17:00'],
-        sunday: ['11:00', '17:00'],
-      },
-    };
-
-    user.analyticsSettings = {
-      weeklyReportDay: 'monday',
-      includeReach: true,
-      includeEngagement: true,
-      includeGrowth: true,
-      includeTopPosts: true,
-      trackClicks: true,
-      trackVisits: true,
-      trackDemographics: false,
-    };
-
-    user.privacySettings = {
-      storeDrafts: true,
-      cacheContent: true,
-      analyticsCollection: true,
-      profileVisibility: 'public',
-      shareAnalytics: 'team',
-    };
-
-    user.advancedSettings = {
-      debugMode: false,
-      apiLogs: false,
-      betaFeatures: false,
-      aiModelTesting: false,
-      imageQuality: 'high',
-      cacheDuration: 7,
-    };
-
-    user.platformPreferences = {
-      autoCrosspost: true,
-      platformOptimizations: true,
-      tagLocation: false,
-    };
-
-    await this.usersRepository.save(user);
+    // Reset notification settings to defaults
+    const defaultNotifications = this.notificationSettingsRepository.create({
+      userId: user.id,
+    });
+    Object.assign(user.notificationSettings, defaultNotifications);
+    await this.notificationSettingsRepository.save(user.notificationSettings);
   }
 
-  // Platform Preferences
-  async getPlatformPreferences(userId: string) {
+  // Platform Preferences - Deprecated (will be removed in future versions)
+  async getPlatformPreferences(userId: number) {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user.platformPreferences;
+    // Return empty object as platform preferences are now handled via Platforms table
+    return {};
   }
 
   async updatePlatformPreferences(
-    userId: string,
+    userId: number,
     updateDto: UpdatePlatformPreferencesDto,
   ): Promise<User> {
     const user = await this.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    user.platformPreferences = {
-      ...user.platformPreferences,
-      ...updateDto,
-    };
-
-    return this.usersRepository.save(user);
+    // Platform preferences are now handled via Platforms table, this is a no-op
+    return user;
   }
 }

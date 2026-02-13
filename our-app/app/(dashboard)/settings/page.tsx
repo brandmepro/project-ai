@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Text, Stack, SimpleGrid } from '@mantine/core'
 import { SubscriptionCard } from '@/components/settings/subscription-card'
 import { AISettingsCard } from '@/components/settings/ai-settings-card'
+import { AIAnalyticsCard } from '@/components/settings/ai-analytics-card'
 import { SchedulingCard } from '@/components/settings/scheduling-card'
 import { PlatformManagementCard } from '@/components/settings/platform-management-card'
 import { AnalyticsSettingsCard } from '@/components/settings/analytics-settings-card'
@@ -34,14 +35,17 @@ export default function SettingsPage() {
         {/* Priority Section - Full Width */}
         <SubscriptionCard index={0} />
 
+        {/* AI Usage Analytics - Full Width */}
+        <AIAnalyticsCard index={1} />
+
         {/* Main Settings Grid - 2 Columns on Large Screens */}
         <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg">
-          <AISettingsCard index={1} />
-          <SchedulingCard index={2} />
-          <PlatformManagementCard index={3} />
-          <AnalyticsSettingsCard index={4} />
-          <DataPrivacyCard index={5} />
-          <AdvancedSettingsCard index={6} />
+          <AISettingsCard index={2} />
+          <SchedulingCard index={3} />
+          <PlatformManagementCard index={4} />
+          <AnalyticsSettingsCard index={5} />
+          <DataPrivacyCard index={6} />
+          <AdvancedSettingsCard index={7} />
         </SimpleGrid>
       </Stack>
     </div>

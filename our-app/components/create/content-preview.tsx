@@ -13,6 +13,7 @@ import {
   ActionIcon,
   Skeleton,
   Button,
+  Tooltip,
 } from '@mantine/core'
 import { 
   IconHeart, 
@@ -25,9 +26,14 @@ import {
   IconBuildingStore,
   IconRefresh,
   IconSparkles,
+  IconBolt,
+  IconCurrencyDollar,
 } from '@tabler/icons-react'
 import { useAppStore, type Platform } from '@/lib/store'
-import { useAIControllerGenerateWithTask } from '@businesspro/api-client'
+import { 
+  useAIControllerGenerateCaption,
+  useAIControllerGenerateHashtags,
+} from '@businesspro/api-client'
 
 const platformIcons: Record<Platform, typeof IconBrandInstagram> = {
   instagram: IconBrandInstagram,
@@ -98,11 +104,20 @@ interface ContentPreviewProps {
 export function ContentPreview({ className }: ContentPreviewProps) {
   const { createFlow, businessName, updateCreateFlow } = useAppStore()
   const [isGenerating, setIsGenerating] = useState(false)
+  const [aiMetadata, setAiMetadata] = useState<{
+    model?: string
+    costBucket?: string
+    durationMs?: number
+  }>({})
   
   const activePlatform = createFlow.platforms[0] || 'instagram'
   const PlatformIcon = platformIcons[activePlatform]
   
-  const generateMutation = useAIControllerGenerateWithTask()
+  // Safe business name with fallback
+  const displayBusinessName = businessName || createFlow.businessType || 'Your Business'
+  
+  const generateCaptionMutation = useAIControllerGenerateCaption()
+  const generateHashtagsMutation = useAIControllerGenerateHashtags()
 
   const handleAIGeneration = async () => {
     if (!createFlow.businessType || !createFlow.contentGoal) {
@@ -122,22 +137,49 @@ export function ContentPreview({ className }: ContentPreviewProps) {
 
     setIsGenerating(true)
     try {
-      const response: any = await generateMutation.mutateAsync({
+      // Step 1: Generate Caption using AI
+      const captionResponse: any = await generateCaptionMutation.mutateAsync({
         data: {
-          taskType: createFlow.contentGoal || 'awareness',
           businessType: createFlow.businessType,
+          platform: activePlatform,
+          contentGoal: createFlow.contentGoal,
           tone: createFlow.tone || 'friendly',
           language: createFlow.language || 'english',
-          platform: activePlatform,
+          context: createFlow.context || '',
+          imageUrl: createFlow.imageUrl || undefined,
+          videoUrl: createFlow.videoUrl || undefined,
         }
       })
       
-      // Extract caption and hashtags from AI response
-      const result = response?.data || response
-      updateCreateFlow({ 
-        generatedCaption: result.content || result.caption || generateCaption(createFlow.businessType, createFlow.contentGoal, createFlow.tone, createFlow.language).caption,
-        generatedHashtags: result.hashtags || generateCaption(createFlow.businessType, createFlow.contentGoal, createFlow.tone, createFlow.language).hashtags,
+      const captionData = captionResponse?.data || captionResponse
+      const generatedCaption = captionData.caption || generateCaption(createFlow.businessType, createFlow.contentGoal, createFlow.tone, createFlow.language).caption
+      
+      // Store AI metadata
+      if (captionData.metadata) {
+        setAiMetadata({
+          model: captionData.metadata.modelName || captionData.metadata.model,
+          costBucket: captionData.metadata.costBucket,
+          durationMs: captionData.metadata.durationMs,
+        })
+      }
+      
+      updateCreateFlow({ generatedCaption })
+
+      // Step 2: Generate Hashtags using AI
+      const hashtagsResponse: any = await generateHashtagsMutation.mutateAsync({
+        data: {
+          caption: generatedCaption,
+          businessType: createFlow.businessType,
+          platform: activePlatform,
+          language: createFlow.language || 'english',
+        }
       })
+      
+      const hashtagsData = hashtagsResponse?.data || hashtagsResponse
+      const generatedHashtags = hashtagsData.hashtags || generateCaption(createFlow.businessType, createFlow.contentGoal, createFlow.tone, createFlow.language).hashtags
+      
+      updateCreateFlow({ generatedHashtags })
+      
     } catch (error) {
       console.error('AI generation failed, using fallback:', error)
       // Fallback to mock data
@@ -151,6 +193,7 @@ export function ContentPreview({ className }: ContentPreviewProps) {
         generatedCaption: caption,
         generatedHashtags: hashtags,
       })
+      setAiMetadata({}) // Clear metadata on error
     } finally {
       setIsGenerating(false)
     }
@@ -170,11 +213,25 @@ export function ContentPreview({ className }: ContentPreviewProps) {
     <Paper className={`p-4 lg:p-6 bg-card border border-border ${className}`} withBorder={false}>
       <Group justify="space-between" mb="lg">
         <Stack gap={4}>
-          <Text fw={600} size="lg" className="text-foreground">
-            Live Preview
-          </Text>
+          <Group gap="xs">
+            <Text fw={600} size="lg" className="text-foreground">
+              Live Preview
+            </Text>
+            {aiMetadata.model && (
+              <Tooltip label={`Generated using ${aiMetadata.model} • ${aiMetadata.durationMs}ms`}>
+                <Badge 
+                  size="xs" 
+                  variant="light" 
+                  color={aiMetadata.costBucket === 'low' ? 'green' : aiMetadata.costBucket === 'high' ? 'orange' : 'blue'}
+                  leftSection={<IconSparkles size={10} />}
+                >
+                  AI
+                </Badge>
+              </Tooltip>
+            )}
+          </Group>
           <Text size="xs" c="dimmed">
-            Real-time preview of your content
+            Real-time preview of your AI-generated content
           </Text>
         </Stack>
         
@@ -227,11 +284,11 @@ export function ContentPreview({ className }: ContentPreviewProps) {
               {/* Post Header */}
               <Box className="flex items-center gap-3 px-4 py-3">
                 <Avatar size="md" radius="xl" color="violet">
-                  {businessName.charAt(0)}
+                  {displayBusinessName.charAt(0).toUpperCase()}
                 </Avatar>
                 <Stack gap={0}>
                   <Text size="sm" fw={600} className="text-gray-900">
-                    {businessName}
+                    {displayBusinessName}
                   </Text>
                   <Text size="xs" c="dimmed">
                     {createFlow.scheduledDate 
@@ -275,7 +332,7 @@ export function ContentPreview({ className }: ContentPreviewProps) {
                       <Stack align="center" gap="sm">
                         <Box className="h-20 w-20 rounded-2xl bg-white/80 flex items-center justify-center shadow-lg">
                           <Text size="xl" fw={700} className="text-primary">
-                            {businessName.charAt(0)}
+                            {displayBusinessName.charAt(0).toUpperCase()}
                           </Text>
                         </Box>
                         {createFlow.visualStyle && (
@@ -321,7 +378,7 @@ export function ContentPreview({ className }: ContentPreviewProps) {
                       animate={{ opacity: 1 }}
                     >
                       <Text size="sm" className="text-gray-900 leading-relaxed">
-                        <Text span fw={600}>{businessName}</Text>{' '}
+                        <Text span fw={600}>{displayBusinessName}</Text>{' '}
                         {createFlow.generatedCaption || 'Your AI-generated caption will appear here...'}
                       </Text>
                       {createFlow.generatedHashtags.length > 0 && (

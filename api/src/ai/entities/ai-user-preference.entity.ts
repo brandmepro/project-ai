@@ -18,7 +18,7 @@ export class AIUserPreference {
   id: string;
 
   @Column({ type: 'uuid', name: 'user_id' })
-  userId: string;
+  userId: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

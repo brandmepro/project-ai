@@ -21,7 +21,7 @@ export function Header() {
   const router = useRouter()
   const logoutMutation = useAuthControllerLogout()
   
-  const userName = (userProfile as any)?.name || (userProfile as any)?.businessName || (userProfile as any)?.email?.split('@')[0] || businessName
+  const userName = (userProfile as any)?.name || (userProfile as any)?.businessName || (userProfile as any)?.email?.split('@')[0] || businessName || 'User'
   const userEmail = (userProfile as any)?.email || ''
   
   const handleLogout = async () => {

@@ -21,7 +21,7 @@ export class FeedbackService {
    * Record user feedback and update preferences
    */
   async recordFeedback(
-    userId: string,
+    userId: number,
     aiLogId: string,
     modelId: string,
     category: AITaskCategory,
@@ -63,7 +63,7 @@ export class FeedbackService {
    * Update user's preference for this model + category
    */
   private async updateUserPreference(
-    userId: string,
+    userId: number,
     modelId: string,
     category: AITaskCategory,
     feedbackType: FeedbackType,
@@ -161,7 +161,7 @@ export class FeedbackService {
    * Get user's top models for a category
    */
   async getTopModelsForUser(
-    userId: string,
+    userId: number,
     category: AITaskCategory,
     limit: number = 3,
   ): Promise<AIUserPreference[]> {

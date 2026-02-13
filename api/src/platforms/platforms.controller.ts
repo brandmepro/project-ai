@@ -31,7 +31,7 @@ export class PlatformsController {
     status: 200,
     description: 'List of all platform connections',
   })
-  async getAllConnections(@CurrentUser('id') userId: string) {
+  async getAllConnections(@CurrentUser('id') userId: number) {
     return this.platformsService.getAllConnections(userId);
   }
 
@@ -41,7 +41,7 @@ export class PlatformsController {
     status: 200,
     description: 'Array of connected platform names',
   })
-  async getConnectedPlatforms(@CurrentUser('id') userId: string) {
+  async getConnectedPlatforms(@CurrentUser('id') userId: number) {
     return this.platformsService.getConnectedPlatforms(userId);
   }
 
@@ -52,7 +52,7 @@ export class PlatformsController {
     description: 'Connection status and details',
   })
   async getStatus(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Param('platform') platform: Platform,
   ) {
     return this.platformsService.getConnectionStatus(userId, platform);
@@ -65,7 +65,7 @@ export class PlatformsController {
     description: 'Platform connected successfully',
   })
   async connect(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Param('platform') platform: Platform,
     @Body()
     connectionData: {
@@ -92,7 +92,7 @@ export class PlatformsController {
     description: 'Platform disconnected successfully',
   })
   async disconnect(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Param('platform') platform: Platform,
   ) {
     await this.platformsService.disconnect(userId, platform);

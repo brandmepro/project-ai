@@ -17,6 +17,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AIControllerGetAnalyticsParams,
   AIControllerGetSuggestionsParams,
   FeedbackDtoDTO,
   GenerateCaptionRequestDTO,
@@ -172,24 +173,28 @@ export const useAIControllerSelectModel = <TError = unknown, TContext = unknown>
   return useMutation(mutationOptions);
 };
 /**
- * @summary Get available models for category
+ * @summary Get available models for capability
  */
-export const aIControllerGetModelsForCategory = (category: string, signal?: AbortSignal) => {
-  return customAxiosInstance<void>({ url: `/api/v1/ai/models/${category}`, method: 'GET', signal });
+export const aIControllerGetModelsByCapability = (capability: string, signal?: AbortSignal) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/ai/models/${capability}`,
+    method: 'GET',
+    signal,
+  });
 };
 
-export const getAIControllerGetModelsForCategoryQueryKey = (category?: string) => {
-  return [`/api/v1/ai/models/${category}`] as const;
+export const getAIControllerGetModelsByCapabilityQueryKey = (capability?: string) => {
+  return [`/api/v1/ai/models/${capability}`] as const;
 };
 
-export const getAIControllerGetModelsForCategoryQueryOptions = <
-  TData = Awaited<ReturnType<typeof aIControllerGetModelsForCategory>>,
+export const getAIControllerGetModelsByCapabilityQueryOptions = <
+  TData = Awaited<ReturnType<typeof aIControllerGetModelsByCapability>>,
   TError = unknown,
 >(
-  category: string,
+  capability: string,
   options?: {
     query?: UseQueryOptions<
-      Awaited<ReturnType<typeof aIControllerGetModelsForCategory>>,
+      Awaited<ReturnType<typeof aIControllerGetModelsByCapability>>,
       TError,
       TData
     >;
@@ -197,42 +202,43 @@ export const getAIControllerGetModelsForCategoryQueryOptions = <
 ) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getAIControllerGetModelsForCategoryQueryKey(category);
+  const queryKey =
+    queryOptions?.queryKey ?? getAIControllerGetModelsByCapabilityQueryKey(capability);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof aIControllerGetModelsForCategory>>> = ({
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof aIControllerGetModelsByCapability>>> = ({
     signal,
-  }) => aIControllerGetModelsForCategory(category, signal);
+  }) => aIControllerGetModelsByCapability(capability, signal);
 
-  return { queryKey, queryFn, enabled: !!category, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof aIControllerGetModelsForCategory>>,
+  return { queryKey, queryFn, enabled: !!capability, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof aIControllerGetModelsByCapability>>,
     TError,
     TData
   > & { queryKey: QueryKey };
 };
 
-export type AIControllerGetModelsForCategoryQueryResult = NonNullable<
-  Awaited<ReturnType<typeof aIControllerGetModelsForCategory>>
+export type AIControllerGetModelsByCapabilityQueryResult = NonNullable<
+  Awaited<ReturnType<typeof aIControllerGetModelsByCapability>>
 >;
-export type AIControllerGetModelsForCategoryQueryError = unknown;
+export type AIControllerGetModelsByCapabilityQueryError = unknown;
 
 /**
- * @summary Get available models for category
+ * @summary Get available models for capability
  */
 
-export function useAIControllerGetModelsForCategory<
-  TData = Awaited<ReturnType<typeof aIControllerGetModelsForCategory>>,
+export function useAIControllerGetModelsByCapability<
+  TData = Awaited<ReturnType<typeof aIControllerGetModelsByCapability>>,
   TError = unknown,
 >(
-  category: string,
+  capability: string,
   options?: {
     query?: UseQueryOptions<
-      Awaited<ReturnType<typeof aIControllerGetModelsForCategory>>,
+      Awaited<ReturnType<typeof aIControllerGetModelsByCapability>>,
       TError,
       TData
     >;
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getAIControllerGetModelsForCategoryQueryOptions(category, options);
+  const queryOptions = getAIControllerGetModelsByCapabilityQueryOptions(capability, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -840,6 +846,144 @@ export function useAIControllerGetSuggestions<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getAIControllerGetSuggestionsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Stream AI caption generation in real-time
+ */
+export const aIControllerStreamCaption = (
+  generateCaptionRequestDTO: GenerateCaptionRequestDTO,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/ai/stream/caption`,
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    signal,
+  });
+};
+
+export const getAIControllerStreamCaptionQueryKey = (
+  generateCaptionRequestDTO?: GenerateCaptionRequestDTO,
+) => {
+  return [`/api/v1/ai/stream/caption`, generateCaptionRequestDTO] as const;
+};
+
+export const getAIControllerStreamCaptionQueryOptions = <
+  TData = Awaited<ReturnType<typeof aIControllerStreamCaption>>,
+  TError = unknown,
+>(
+  generateCaptionRequestDTO: GenerateCaptionRequestDTO,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof aIControllerStreamCaption>>, TError, TData>;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAIControllerStreamCaptionQueryKey(generateCaptionRequestDTO);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof aIControllerStreamCaption>>> = ({
+    signal,
+  }) => aIControllerStreamCaption(generateCaptionRequestDTO, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof aIControllerStreamCaption>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AIControllerStreamCaptionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof aIControllerStreamCaption>>
+>;
+export type AIControllerStreamCaptionQueryError = unknown;
+
+/**
+ * @summary Stream AI caption generation in real-time
+ */
+
+export function useAIControllerStreamCaption<
+  TData = Awaited<ReturnType<typeof aIControllerStreamCaption>>,
+  TError = unknown,
+>(
+  generateCaptionRequestDTO: GenerateCaptionRequestDTO,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof aIControllerStreamCaption>>, TError, TData>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAIControllerStreamCaptionQueryOptions(generateCaptionRequestDTO, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Get AI usage analytics for user
+ */
+export const aIControllerGetAnalytics = (
+  params: AIControllerGetAnalyticsParams,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({ url: `/api/v1/ai/analytics`, method: 'GET', params, signal });
+};
+
+export const getAIControllerGetAnalyticsQueryKey = (params?: AIControllerGetAnalyticsParams) => {
+  return [`/api/v1/ai/analytics`, ...(params ? [params] : [])] as const;
+};
+
+export const getAIControllerGetAnalyticsQueryOptions = <
+  TData = Awaited<ReturnType<typeof aIControllerGetAnalytics>>,
+  TError = unknown,
+>(
+  params: AIControllerGetAnalyticsParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof aIControllerGetAnalytics>>, TError, TData>;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAIControllerGetAnalyticsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof aIControllerGetAnalytics>>> = ({
+    signal,
+  }) => aIControllerGetAnalytics(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof aIControllerGetAnalytics>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AIControllerGetAnalyticsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof aIControllerGetAnalytics>>
+>;
+export type AIControllerGetAnalyticsQueryError = unknown;
+
+/**
+ * @summary Get AI usage analytics for user
+ */
+
+export function useAIControllerGetAnalytics<
+  TData = Awaited<ReturnType<typeof aIControllerGetAnalytics>>,
+  TError = unknown,
+>(
+  params: AIControllerGetAnalyticsParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof aIControllerGetAnalytics>>, TError, TData>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAIControllerGetAnalyticsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

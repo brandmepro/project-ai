@@ -25,24 +25,50 @@ export class VercelAIGateway {
 
   /**
    * Get cost bucket based on model type
+   * Handles both AIModel enum and string model IDs
    */
-  private getCostBucket(model: AIModel): CostBucket {
-    switch (model) {
-      case AIModel.HEAVY_MODEL:
-      case AIModel.VISION_MODEL:
-        return CostBucket.HIGH;
-      case AIModel.LIGHT_MODEL:
-        return CostBucket.LOW;
-      default:
-        return CostBucket.MEDIUM;
+  private getCostBucket(model: AIModel | string): CostBucket {
+    // Handle enum values
+    if (model === AIModel.HEAVY_MODEL || model === AIModel.VISION_MODEL) {
+      return CostBucket.HIGH;
     }
+    if (model === AIModel.LIGHT_MODEL) {
+      return CostBucket.LOW;
+    }
+    
+    // Handle string model IDs - infer from model name
+    const modelStr = String(model).toLowerCase();
+    
+    // High cost models
+    if (modelStr.includes('gpt-4o') && !modelStr.includes('mini')) {
+      return CostBucket.HIGH;
+    }
+    if (modelStr.includes('claude') && (modelStr.includes('opus') || modelStr.includes('sonnet'))) {
+      return CostBucket.HIGH;
+    }
+    if (modelStr.includes('gpt-5') && !modelStr.includes('mini')) {
+      return CostBucket.HIGH;
+    }
+    
+    // Low cost models
+    if (modelStr.includes('mini') || modelStr.includes('haiku') || modelStr.includes('flash')) {
+      return CostBucket.LOW;
+    }
+    if (modelStr.includes('deepseek') || modelStr.includes('llama')) {
+      return CostBucket.LOW;
+    }
+    
+    // Default to medium
+    return CostBucket.MEDIUM;
   }
 
   /**
-   * Extract provider and model name from enum
+   * Extract provider and model name from model ID
+   * Handles both AIModel enum and string model IDs (format: "provider:model-name")
    */
-  private parseModelEnum(modelEnum: AIModel): { provider: string; modelName: string } {
-    const [provider, ...modelParts] = modelEnum.split(':');
+  private parseModelEnum(model: AIModel | string): { provider: string; modelName: string } {
+    const modelStr = String(model);
+    const [provider, ...modelParts] = modelStr.split(':');
     return {
       provider: provider || 'unknown',
       modelName: modelParts.join(':') || 'unknown',
@@ -50,22 +76,48 @@ export class VercelAIGateway {
   }
 
   /**
-   * Generate text completion
+   * Generate text completion (with optional image/video URLs)
    */
   async generateCompletion(
     config: AIRequestConfig,
     prompt: string,
     systemPrompt?: string,
+    mediaUrls?: { type: 'image' | 'video'; url: string }[],
   ): Promise<{ text: string; metadata: AIResponseMetadata }> {
     const startTime = Date.now();
     
     try {
       const { provider, modelName } = this.parseModelEnum(config.model);
 
+      // Build messages array for multimodal support
+      const messages: any[] = [];
+      
+      if (systemPrompt) {
+        messages.push({ role: 'system', content: systemPrompt });
+      }
+
+      // User message with text and optional media
+      const userContent: any[] = [{ type: 'text', text: prompt }];
+      
+      if (mediaUrls && mediaUrls.length > 0) {
+        for (const media of mediaUrls) {
+          if (media.type === 'image') {
+            userContent.push({
+              type: 'image',
+              image: media.url,
+            });
+          }
+          // Note: Video support depends on model capabilities
+        }
+      }
+
+      messages.push({ role: 'user', content: userContent });
+
       const result = await generateText({
         model: config.model as any,
-        prompt,
-        system: systemPrompt,
+        messages: messages.length > 0 ? messages as any : undefined,
+        prompt: messages.length === 0 ? prompt : undefined,
+        system: messages.length === 0 ? systemPrompt : undefined,
         maxTokens: config.maxTokens,
         temperature: config.temperature ?? 0.7,
         topP: config.topP ?? 1,
@@ -83,9 +135,9 @@ export class VercelAIGateway {
         model: config.model,
         feature: config.feature,
         costBucket: this.getCostBucket(config.model),
-        promptTokens: result.usage?.promptTokens,
-        completionTokens: result.usage?.completionTokens,
-        totalTokens: result.usage?.totalTokens,
+        promptTokens: (result.usage as any)?.promptTokens || 0,
+        completionTokens: (result.usage as any)?.completionTokens || 0,
+        totalTokens: result.usage?.totalTokens || 0,
         durationMs,
         provider,
         modelName,
@@ -105,13 +157,14 @@ export class VercelAIGateway {
   }
 
   /**
-   * Generate structured JSON response
+   * Generate structured JSON response (with optional media)
    */
   async generateJSON<T = any>(
     config: AIRequestConfig,
     prompt: string,
     systemPrompt?: string,
     schema?: any,
+    mediaUrls?: { type: 'image' | 'video'; url: string }[],
   ): Promise<{ data: T; metadata: AIResponseMetadata }> {
     const startTime = Date.now();
     
@@ -123,10 +176,30 @@ export class VercelAIGateway {
         ? `${prompt}\n\nRespond with valid JSON matching this schema: ${JSON.stringify(schema)}`
         : `${prompt}\n\nRespond with valid JSON only.`;
 
+      // Build messages for multimodal if needed
+      const messages: any[] = [];
+      
+      if (systemPrompt) {
+        messages.push({ role: 'system', content: systemPrompt });
+      }
+
+      const userContent: any[] = [{ type: 'text', text: jsonPrompt }];
+      
+      if (mediaUrls && mediaUrls.length > 0) {
+        for (const media of mediaUrls) {
+          if (media.type === 'image') {
+            userContent.push({ type: 'image', image: media.url });
+          }
+        }
+      }
+
+      messages.push({ role: 'user', content: userContent });
+
       const result = await generateText({
         model: config.model as any,
-        prompt: jsonPrompt,
-        system: systemPrompt,
+        messages: messages.length > 0 ? messages as any : undefined,
+        prompt: messages.length === 0 ? jsonPrompt : undefined,
+        system: messages.length === 0 ? systemPrompt : undefined,
         maxTokens: config.maxTokens,
         temperature: config.temperature ?? 0.7,
         topP: config.topP ?? 1,
@@ -163,9 +236,9 @@ export class VercelAIGateway {
         model: config.model,
         feature: config.feature,
         costBucket: this.getCostBucket(config.model),
-        promptTokens: result.usage?.promptTokens,
-        completionTokens: result.usage?.completionTokens,
-        totalTokens: result.usage?.totalTokens,
+        promptTokens: (result.usage as any)?.promptTokens || 0,
+        completionTokens: (result.usage as any)?.completionTokens || 0,
+        totalTokens: result.usage?.totalTokens || 0,
         durationMs,
         provider,
         modelName,

@@ -36,7 +36,7 @@ export class ContentController {
   @ApiResponse({ status: 201, description: 'Content created successfully' })
   async create(
     @Body() createContentDto: CreateContentDto,
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
   ) {
     return this.contentService.create(createContentDto, userId);
   }
@@ -48,7 +48,7 @@ export class ContentController {
     description: 'Content list with pagination metadata',
   })
   async findAll(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Query() queryDto: QueryContentDto,
   ) {
     return this.contentService.findAll(userId, queryDto);
@@ -60,7 +60,7 @@ export class ContentController {
     status: 200,
     description: 'Content statistics by status',
   })
-  async getStats(@CurrentUser('id') userId: string) {
+  async getStats(@CurrentUser('id') userId: number) {
     return this.contentService.getContentStats(userId);
   }
 
@@ -72,7 +72,7 @@ export class ContentController {
     description: 'Recent content items',
   })
   async getRecent(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Query('limit') limit?: number,
   ) {
     return this.contentService.getRecentContent(userId, limit || 4);
@@ -87,7 +87,7 @@ export class ContentController {
     description: 'Scheduled content for the specified date range',
   })
   async getScheduled(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
   ) {
@@ -104,7 +104,7 @@ export class ContentController {
   @ApiResponse({ status: 404, description: 'Content not found' })
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
   ) {
     return this.contentService.findOne(id, userId);
   }
@@ -115,7 +115,7 @@ export class ContentController {
   @ApiResponse({ status: 404, description: 'Content not found' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body() updateContentDto: UpdateContentDto,
   ) {
     return this.contentService.update(id, userId, updateContentDto);
@@ -127,7 +127,7 @@ export class ContentController {
   @ApiResponse({ status: 404, description: 'Content not found' })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
   ) {
     await this.contentService.remove(id, userId);
     return { message: 'Content deleted successfully' };
@@ -139,7 +139,7 @@ export class ContentController {
   @ApiResponse({ status: 404, description: 'Content not found' })
   async duplicate(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
   ) {
     return this.contentService.duplicate(id, userId);
   }
@@ -150,7 +150,7 @@ export class ContentController {
   @ApiResponse({ status: 404, description: 'Content not found' })
   async publish(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
   ) {
     return this.contentService.publish(id, userId);
   }
@@ -161,7 +161,7 @@ export class ContentController {
   @ApiResponse({ status: 404, description: 'Content not found' })
   async reschedule(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Body('scheduledFor') scheduledFor: string,
   ) {
     return this.contentService.reschedule(

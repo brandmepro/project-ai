@@ -10,7 +10,7 @@ export class DashboardService {
     private readonly analyticsService: AnalyticsService,
   ) {}
 
-  async getDashboardStats(userId: string) {
+  async getDashboardStats(userId: number) {
     const [contentStats, overviewStats, recentContent] = await Promise.all([
       this.contentService.getContentStats(userId),
       this.analyticsService.getOverviewStats(userId, DateRange.THIRTY_DAYS),
@@ -24,7 +24,7 @@ export class DashboardService {
     };
   }
 
-  async getRecentContent(userId: string, limit?: number) {
+  async getRecentContent(userId: number, limit?: number) {
     return this.contentService.getRecentContent(userId, limit);
   }
 }

@@ -1,31 +1,41 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AITaskRequest, AITaskCategory } from './types/ai-types';
 import { AILog } from './entities/ai-log.entity';
 import { ModelSelectionService } from './services/model-selection.service';
+import { AIGatewayService } from './services/ai-gateway.service';
+import { AIModel, AIFeature, AIResponseMetadata } from '@businesspro/ai';
+import { AIPrompts } from './prompts/ai-prompts';
+import { ModelOptimizerService } from './services/model-optimizer.service';
 
-// Temporary DTOs
-class GenerateIdeasRequest { businessType: string; platforms: string[]; contentGoal: string; tone: string; language: string; visualStyle: string; context?: string; }
-class GenerateCaptionRequest { businessType: string; contentGoal: string; tone: string; language: string; context: string; }
-class GenerateHooksRequest { businessType: string; contentType: string; goal: string; language?: string; }
+// DTOs
+class GenerateIdeasRequest { businessType: string; platforms: string[]; contentGoal: string; tone: string; language: string; visualStyle: string; context?: string; imageUrl?: string; }
+class GenerateCaptionRequest { businessType: string; platform: string; contentGoal: string; tone: string; language: string; context?: string; imageUrl?: string; videoUrl?: string; }
+class GenerateHooksRequest { businessType: string; contentType: string; goal: string; language?: string; mediaUrl?: string; }
 class GenerateHashtagsRequest { caption: string; businessType: string; platform: string; language: string; }
 
 @Injectable()
 export class AIService {
+  private readonly logger = new Logger(AIService.name);
+
   constructor(
     private configService: ConfigService,
     @InjectRepository(AILog)
     private aiLogRepository: Repository<AILog>,
     private modelSelectionService: ModelSelectionService,
-  ) {}
+    private aiGatewayService: AIGatewayService,
+    private modelOptimizerService: ModelOptimizerService,
+  ) {
+    this.logger.log('AI Service initialized');
+  }
 
   /**
    * NEW: Generate with intelligent task-based model selection
    * TODO: Implement actual AI generation
    */
-  async generateWithTask(userId: string, taskRequest: AITaskRequest) {
+  async generateWithTask(userId: number, taskRequest: AITaskRequest) {
     // Temporary mock response
     return {
       data: { message: 'AI generation coming soon' },
@@ -41,185 +51,278 @@ export class AIService {
 
   /**
    * Generate content ideas (5 storylines)
-   * TODO: Implement actual AI generation
    */
   async generateIdeas(
-    userId: string,
+    userId: number,
     request: GenerateIdeasRequest,
   ) {
+    const gateway = this.aiGatewayService.getGateway();
     
-    const systemPrompt = `You are a social media marketing expert for local businesses in India.
-Generate engaging, relevant content ideas that are culturally appropriate and trend-aware.
-Focus on ${request.businessType} businesses.`;
+    const systemPrompt = AIPrompts.getIdeasSystemPrompt(request);
+    const prompt = AIPrompts.getIdeasPrompt(request);
 
-    const prompt = `Generate 5 unique social media content ideas for a ${request.businessType} business.
+    const startTime = Date.now();
+    
+    // Dynamic model selection
+    const taskAnalysis = await this.modelOptimizerService.analyzeTask(
+      'generate_ideas',
+      !!request.imageUrl,
+      (request.context?.length || 0) + JSON.stringify(request).length,
+      true,
+    );
 
-Business Context:
-- Platforms: ${request.platforms.join(', ')}
-- Content Goal: ${request.contentGoal}
-- Tone: ${request.tone}
-- Language: ${request.language}
-- Visual Style: ${request.visualStyle}
-${request.context ? `- Additional Context: ${request.context}` : ''}
+    this.logger.log(
+      `Generating ideas for user ${userId}, business: ${request.businessType}, model: ${taskAnalysis.recommendedModelId}, reason: ${taskAnalysis.reason}`,
+    );
 
-For each idea, provide:
-1. A catchy title
-2. Brief description (2-3 sentences)
-3. Engagement score (0-100)
-4. 2-3 relevant tags (e.g., "Best for reach", "Trending hook", "High engagement")
-5. Brief reasoning why this will work
+    try {
+      const { data, metadata} = await gateway.generateJSON<{ ideas: any[] }>(
+        {
+          model: taskAnalysis.recommendedModelId,
+          feature: AIFeature.GENERATE_IDEAS,
+          maxTokens: taskAnalysis.estimatedTokens,
+          temperature: this.modelOptimizerService.getOptimalTemperature('generate_ideas', 'high'),
+        },
+        prompt,
+        systemPrompt,
+      );
 
-Respond with valid JSON in this format:
-{
-  "ideas": [
-    {
-      "id": "idea_1",
-      "title": "...",
-      "description": "...",
-      "engagementScore": 85,
-      "tags": ["Best for reach", "Trending hook"],
-      "reasoning": "..."
+      const duration = Date.now() - startTime;
+      this.logger.log(`Ideas generated successfully in ${duration}ms, tokens: ${metadata.totalTokens}, cost: ${metadata.costBucket}`);
+
+      // Log AI usage asynchronously
+      setImmediate(() => {
+        this.logAIUsage(userId, metadata, request, data).catch(err => 
+          this.logger.error('Failed to log AI usage', err.stack)
+        );
+      });
+
+      return {
+        ideas: data.ideas,
+        metadata: {
+          model: metadata.model,
+          costBucket: metadata.costBucket,
+          totalTokens: metadata.totalTokens,
+          durationMs: duration,
+          generatedAt: new Date(),
+        },
+      };
+    } catch (error) {
+      this.logger.error(`AI Ideas Generation failed for user ${userId}`, error.stack);
+      throw error;
     }
-  ]
-}`;
-
-    // Temporary mock response
-    return {
-      ideas: [
-        { id: '1', title: 'Sample Idea 1', description: 'Coming soon', engagementScore: 85, tags: ['sample'], reasoning: 'AI being set up' }
-      ],
-      metadata: {
-        model: 'temp-model',
-        costBucket: 'low',
-        generatedAt: new Date(),
-      },
-    };
   }
 
   /**
    * Generate caption for content
-   * TODO: Implement actual AI generation
    */
   async generateCaption(
-    userId: string,
+    userId: number,
     request: GenerateCaptionRequest,
   ) {
+    const gateway = this.aiGatewayService.getGateway();
     
-    const systemPrompt = `You are a social media copywriter expert for local businesses in India.
-Write engaging captions in a ${request.tone} tone and ${request.language} language.
-Keep captions concise, engaging, and culturally relevant.`;
+    const systemPrompt = AIPrompts.getCaptionSystemPrompt(request);
+    const prompt = AIPrompts.getCaptionPrompt(request);
 
-    const prompt = `Write a compelling social media caption for a ${request.businessType} business.
+    // Build media URLs if provided
+    const mediaUrls: { type: 'image' | 'video'; url: string }[] = [];
+    if (request.imageUrl) {
+      mediaUrls.push({ type: 'image', url: request.imageUrl });
+    }
+    if (request.videoUrl) {
+      mediaUrls.push({ type: 'video', url: request.videoUrl });
+    }
 
-Context:
-- Business Type: ${request.businessType}
-- Goal: ${request.contentGoal}
-- Tone: ${request.tone}
-- Language: ${request.language}
-- Details: ${request.context}
+    const startTime = Date.now();
 
-Also provide 2 alternative captions with different approaches.
+    // Dynamic model selection
+    const taskAnalysis = await this.modelOptimizerService.analyzeTask(
+      'generate_caption',
+      mediaUrls.length > 0,
+      (request.context?.length || 0) + JSON.stringify(request).length,
+      request.tone === 'fun',
+    );
 
-Respond with valid JSON:
-{
-  "caption": "main caption here",
-  "alternativeCaptions": ["alternative 1", "alternative 2"]
-}`;
+    this.logger.log(
+      `Generating caption for user ${userId}, business: ${request.businessType}, model: ${taskAnalysis.recommendedModelId}${mediaUrls.length > 0 ? ', with media' : ''}, reason: ${taskAnalysis.reason}`,
+    );
 
-    // Temporary mock response
-    return {
-      caption: 'Sample caption - AI service being set up',
-      alternativeCaptions: ['Alternative 1', 'Alternative 2'],
-      metadata: {
-        model: 'temp-model',
-        costBucket: 'low',
-      },
-    };
+    try {
+      const { data, metadata } = await gateway.generateJSON<{
+        caption: string;
+        alternativeCaptions: string[];
+      }>(
+        {
+          model: taskAnalysis.recommendedModelId,
+          feature: AIFeature.GENERATE_CAPTION,
+          maxTokens: taskAnalysis.estimatedTokens,
+          temperature: this.modelOptimizerService.getOptimalTemperature('generate_caption', 'medium'),
+        },
+        prompt,
+        systemPrompt,
+        mediaUrls.length > 0 ? mediaUrls : undefined,
+      );
+
+      const duration = Date.now() - startTime;
+      this.logger.log(`Caption generated in ${duration}ms, tokens: ${metadata.totalTokens}, cost: ${metadata.costBucket}`);
+
+      // Log asynchronously
+      setImmediate(() => {
+        this.logAIUsage(userId, metadata, request, data).catch(err => 
+          this.logger.error('Failed to log AI usage', err.stack)
+        );
+      });
+
+      return {
+        caption: data.caption,
+        alternativeCaptions: data.alternativeCaptions,
+        metadata: {
+          model: metadata.model,
+          costBucket: metadata.costBucket,
+          totalTokens: metadata.totalTokens,
+          durationMs: duration,
+        },
+      };
+    } catch (error) {
+      this.logger.error(
+        `AI Caption Generation failed for user ${userId}, attempted model: ${taskAnalysis.recommendedModelId}`,
+        error.stack,
+      );
+      throw new Error(
+        `AI generation failed using model ${taskAnalysis.recommendedModelId}: ${error.message}`,
+      );
+    }
   }
 
   /**
    * Generate hooks (attention grabbers)
-   * TODO: Implement actual AI generation
    */
   async generateHooks(
-    userId: string,
+    userId: number,
     request: GenerateHooksRequest,
   ) {
+    const gateway = this.aiGatewayService.getGateway();
     
-    const systemPrompt = `You are an expert in creating viral social media hooks that grab attention.
-Generate hooks suitable for ${request.businessType} businesses in India.`;
+    const systemPrompt = AIPrompts.getHooksSystemPrompt(request);
+    const prompt = AIPrompts.getHooksPrompt(request);
 
-    const prompt = `Generate 5 attention-grabbing hooks for ${request.contentType} content.
+    const startTime = Date.now();
 
-Business: ${request.businessType}
-Goal: ${request.goal}
-Language: ${request.language || 'English'}
+    // Dynamic model selection
+    const taskAnalysis = await this.modelOptimizerService.analyzeTask(
+      'generate_hooks',
+      !!request.mediaUrl,
+      JSON.stringify(request).length,
+      true,
+    );
 
-Hooks should:
-- Start with strong attention grabbers
-- Be suitable for the first 3 seconds of a video or the opening line of a post
-- Use patterns like: "POV:", "Did you know...", "The secret to...", etc.
+    this.logger.log(
+      `Generating hooks for user ${userId}, business: ${request.businessType}, model: ${taskAnalysis.recommendedModelId}`,
+    );
 
-Respond with valid JSON:
-{
-  "hooks": ["hook 1", "hook 2", "hook 3", "hook 4", "hook 5"]
-}`;
+    try {
+      const { data, metadata } = await gateway.generateJSON<{ hooks: string[] }>(
+        {
+          model: taskAnalysis.recommendedModelId,
+          feature: AIFeature.GENERATE_HOOKS,
+          maxTokens: taskAnalysis.estimatedTokens,
+          temperature: this.modelOptimizerService.getOptimalTemperature('generate_hooks', 'high'),
+        },
+        prompt,
+        systemPrompt,
+      );
 
-    // Temporary mock response
-    return {
-      hooks: ['Hook 1', 'Hook 2', 'Hook 3', 'Hook 4', 'Hook 5'],
-      metadata: {
-        model: 'temp-model',
-        costBucket: 'low',
-      },
-    };
+      const duration = Date.now() - startTime;
+      this.logger.log(`Hooks generated in ${duration}ms, tokens: ${metadata.totalTokens}, cost: ${metadata.costBucket}`);
+
+      setImmediate(() => {
+        this.logAIUsage(userId, metadata, request, data).catch(err => 
+          this.logger.error('Failed to log AI usage', err.stack)
+        );
+      });
+
+      return {
+        hooks: data.hooks,
+        metadata: {
+          model: metadata.model,
+          costBucket: metadata.costBucket,
+          totalTokens: metadata.totalTokens,
+          durationMs: duration,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`AI Hooks Generation failed for user ${userId}`, error.stack);
+      throw error;
+    }
   }
 
   /**
    * Generate relevant hashtags
-   * TODO: Implement actual AI generation
    */
   async generateHashtags(
-    userId: string,
+    userId: number,
     request: GenerateHashtagsRequest,
   ) {
+    const gateway = this.aiGatewayService.getGateway();
     
-    const systemPrompt = `You are a social media SEO expert specializing in hashtag optimization for ${request.platform}.
-Generate relevant, trending, and niche hashtags for local businesses in India.`;
+    const systemPrompt = AIPrompts.getHashtagsSystemPrompt(request);
+    const prompt = AIPrompts.getHashtagsPrompt(request);
 
-    const prompt = `Generate 10 relevant hashtags for this content:
+    const startTime = Date.now();
 
-Caption: "${request.caption}"
-Business: ${request.businessType}
-Platform: ${request.platform}
-Language: ${request.language}
+    // Dynamic model selection
+    const taskAnalysis = await this.modelOptimizerService.analyzeTask(
+      'generate_hashtags',
+      false,
+      request.caption.length,
+      false,
+    );
 
-Include:
-- 2-3 broad hashtags (high volume)
-- 4-5 niche hashtags (targeted)
-- 2-3 local/regional hashtags
+    this.logger.log(
+      `Generating hashtags for user ${userId}, platform: ${request.platform}, model: ${taskAnalysis.recommendedModelId}`,
+    );
 
-Respond with valid JSON:
-{
-  "hashtags": ["hashtag1", "hashtag2", ...]
-}
+    try {
+      const { data, metadata } = await gateway.generateJSON<{ hashtags: string[] }>(
+        {
+          model: taskAnalysis.recommendedModelId,
+          feature: AIFeature.GENERATE_HASHTAGS,
+          maxTokens: taskAnalysis.estimatedTokens,
+          temperature: this.modelOptimizerService.getOptimalTemperature('generate_hashtags', 'medium'),
+        },
+        prompt,
+        systemPrompt,
+      );
 
-Do NOT include the # symbol in hashtags.`;
+      const duration = Date.now() - startTime;
+      this.logger.log(`Hashtags generated in ${duration}ms, tokens: ${metadata.totalTokens}, cost: ${metadata.costBucket}`);
 
-    // Temporary mock response
-    return {
-      hashtags: ['hashtag1', 'hashtag2', 'hashtag3', 'trending', 'business'],
-      metadata: {
-        model: 'temp-model',
-        costBucket: 'low',
-      },
-    };
+      setImmediate(() => {
+        this.logAIUsage(userId, metadata, request, data).catch(err => 
+          this.logger.error('Failed to log AI usage', err.stack)
+        );
+      });
+
+      return {
+        hashtags: data.hashtags,
+        metadata: {
+          model: metadata.model,
+          costBucket: metadata.costBucket,
+          totalTokens: metadata.totalTokens,
+          durationMs: duration,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`AI Hashtags Generation failed for user ${userId}`, error.stack);
+      throw error;
+    }
   }
 
   /**
    * Get AI-powered suggestions
    */
-  async getSuggestions(userId: string, businessType: string, goal: string) {
+  async getSuggestions(userId: number, businessType: string, goal: string) {
     // This can be enhanced with AI or use heuristics
     const suggestions = [
       {
@@ -240,23 +343,105 @@ Do NOT include the # symbol in hashtags.`;
   }
 
   /**
-   * Log AI usage for cost tracking (CRITICAL)
+   * Stream AI generation for real-time responses
+   */
+  async *streamCaption(
+    userId: number,
+    request: GenerateCaptionRequest,
+  ): AsyncGenerator<string> {
+    const gateway = this.aiGatewayService.getGateway();
+    
+    const systemPrompt = AIPrompts.getCaptionSystemPrompt(request);
+    const prompt = AIPrompts.getCaptionPrompt(request);
+
+    this.logger.log(`Streaming caption for user ${userId}`);
+
+    try {
+      const stream = gateway.streamCompletion(
+        {
+          model: AIModel.LIGHT_MODEL,
+          feature: AIFeature.GENERATE_CAPTION,
+          maxTokens: 500,
+          temperature: 0.8,
+        },
+        prompt,
+        systemPrompt,
+      );
+
+      for await (const chunk of stream) {
+        yield chunk;
+      }
+
+      this.logger.log(`Caption stream completed for user ${userId}`);
+    } catch (error) {
+      this.logger.error(`Stream failed for user ${userId}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Get AI analytics for user
+   */
+  async getAIAnalytics(userId: number, days: number = 30) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const logs = await this.aiLogRepository
+      .createQueryBuilder('log')
+      .where('log.userId = :userId', { userId })
+      .andWhere('log.createdAt >= :since', { since })
+      .getMany();
+
+    const totalRequests = logs.length;
+    const totalTokens = logs.reduce((sum, log) => sum + (log.totalTokens || 0), 0);
+    const avgDuration = logs.reduce((sum, log) => sum + (log.durationMs || 0), 0) / totalRequests;
+
+    const byFeature = logs.reduce((acc, log) => {
+      if (!acc[log.feature]) {
+        acc[log.feature] = { count: 0, tokens: 0, avgDuration: 0 };
+      }
+      acc[log.feature].count++;
+      acc[log.feature].tokens += log.totalTokens || 0;
+      acc[log.feature].avgDuration = (acc[log.feature].avgDuration + (log.durationMs || 0)) / acc[log.feature].count;
+      return acc;
+    }, {});
+
+    const byCost = logs.reduce((acc, log) => {
+      if (!acc[log.costBucket]) {
+        acc[log.costBucket] = { count: 0, tokens: 0 };
+      }
+      acc[log.costBucket].count++;
+      acc[log.costBucket].tokens += log.totalTokens || 0;
+      return acc;
+    }, {});
+
+    return {
+      totalRequests,
+      totalTokens,
+      avgDuration: Math.round(avgDuration),
+      byFeature,
+      byCost,
+      periodDays: days,
+    };
+  }
+
+  /**
+   * Log AI usage for cost tracking
    */
   private async logAIUsage(
-    userId: string,
-    metadata: any,
+    userId: number,
+    metadata: AIResponseMetadata,
     inputData: any,
     outputData: any,
-    categoryKey?: string,
-  ): Promise<string | null> {
+  ): Promise<number | null> {
     try {
       const log = await this.aiLogRepository.save({
         userId,
         feature: metadata.feature,
-        modelEnum: metadata.model || metadata.modelId,
+        modelEnum: metadata.model,
         provider: metadata.provider,
         modelName: metadata.modelName,
-        costBucket: metadata.costBucket || metadata.estimatedCost,
+        costBucket: metadata.costBucket,
         promptTokens: metadata.promptTokens,
         completionTokens: metadata.completionTokens,
         totalTokens: metadata.totalTokens,
@@ -264,16 +449,17 @@ Do NOT include the # symbol in hashtags.`;
         outputData: this.sanitizeData(outputData),
         durationMs: metadata.durationMs,
         status: 'success',
-        categoryKey: categoryKey ?? null,
-        confidenceScore: metadata.confidence ?? null,
+        categoryKey: null,
+        confidenceScore: null,
         selectedBy: 'auto',
         taskPriority: null,
         taskComplexity: null,
       });
       
+      this.logger.debug(`AI usage logged: ${log.id}, tokens: ${log.totalTokens}, cost: ${log.costBucket}`);
       return log.id;
     } catch (error) {
-      console.error('Failed to log AI usage:', error);
+      this.logger.error('Failed to log AI usage', error.stack);
       return null;
     }
   }

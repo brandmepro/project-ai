@@ -24,7 +24,7 @@ export class AnalyticsController {
     description: 'Overview stats with growth metrics',
   })
   async getOverview(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Query() queryDto: AnalyticsQueryDto,
   ) {
     return this.analyticsService.getOverviewStats(userId, queryDto.range);
@@ -37,7 +37,7 @@ export class AnalyticsController {
     description: 'Daily engagement data',
   })
   async getEngagement(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Query() queryDto: AnalyticsQueryDto,
   ) {
     return this.analyticsService.getEngagementData(userId, queryDto.range);
@@ -50,7 +50,7 @@ export class AnalyticsController {
     description: 'Performance metrics by platform',
   })
   async getPlatforms(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('id') userId: number,
     @Query() queryDto: AnalyticsQueryDto,
   ) {
     return this.analyticsService.getPlatformStats(userId, queryDto.range);
@@ -62,7 +62,7 @@ export class AnalyticsController {
     status: 200,
     description: 'Top content by engagement (last 30 days)',
   })
-  async getTopContent(@CurrentUser('id') userId: string) {
+  async getTopContent(@CurrentUser('id') userId: number) {
     return this.analyticsService.getTopContent(userId);
   }
 }

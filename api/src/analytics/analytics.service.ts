@@ -25,7 +25,7 @@ export class AnalyticsService {
     return startDate;
   }
 
-  async getOverviewStats(userId: string, range: DateRange) {
+  async getOverviewStats(userId: number, range: DateRange) {
     const startDate = this.getDateRangeStart(range);
     const endDate = new Date();
 
@@ -118,7 +118,7 @@ export class AnalyticsService {
     };
   }
 
-  async getEngagementData(userId: string, range: DateRange) {
+  async getEngagementData(userId: number, range: DateRange) {
     const days =
       range === DateRange.SEVEN_DAYS
         ? 7
@@ -164,7 +164,7 @@ export class AnalyticsService {
     }));
   }
 
-  async getPlatformStats(userId: string, range: DateRange) {
+  async getPlatformStats(userId: number, range: DateRange) {
     const startDate = this.getDateRangeStart(range);
     const endDate = new Date();
 
@@ -203,7 +203,7 @@ export class AnalyticsService {
     }));
   }
 
-  async getTopContent(userId: string, limit = 10) {
+  async getTopContent(userId: number, limit = 10) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Group, Text, Stack, Switch, Select, SegmentedControl, Box } from '@mantine/core'
-import { IconSparkles } from '@tabler/icons-react'
+import { Group, Text, Stack, Switch, Select, SegmentedControl, Box, Button } from '@mantine/core'
+import { IconSparkles, IconInfoCircle } from '@tabler/icons-react'
 import { SettingsSectionCard } from './settings-section-card'
+import { ModelInfoModal } from './model-info-modal'
 import {
   useUsersControllerGetAiSettings,
   useUsersControllerUpdateAiSettings,
@@ -27,6 +28,7 @@ export function AISettingsCard({ index }: AISettingsCardProps) {
   const [visualStyle, setVisualStyle] = useState('clean')
   const [captionLength, setCaptionLength] = useState('medium')
   const [emojiUsage, setEmojiUsage] = useState('moderate')
+  const [modelInfoOpened, setModelInfoOpened] = useState(false)
 
   useEffect(() => {
     if (aiSettings) {
@@ -62,9 +64,19 @@ export function AISettingsCard({ index }: AISettingsCardProps) {
     >
       {/* AI Model Preference */}
       <Box>
-        <Text size="sm" fw={500} mb="xs" className="text-foreground">
-          AI Model Preference
-        </Text>
+        <Group justify="space-between" mb="xs">
+          <Text size="sm" fw={500} className="text-foreground">
+            AI Model Preference
+          </Text>
+          <Button
+            size="xs"
+            variant="subtle"
+            leftSection={<IconInfoCircle size={14} />}
+            onClick={() => setModelInfoOpened(true)}
+          >
+            View Models
+          </Button>
+        </Group>
         <SegmentedControl
           fullWidth
           value={aiPriority}
@@ -85,6 +97,9 @@ export function AISettingsCard({ index }: AISettingsCardProps) {
           {aiPriority === 'quality' && 'Best quality, may take longer'}
         </Text>
       </Box>
+
+      {/* Model Info Modal */}
+      <ModelInfoModal opened={modelInfoOpened} onClose={() => setModelInfoOpened(false)} />
 
       {/* Content Generation Toggles */}
       <Box>

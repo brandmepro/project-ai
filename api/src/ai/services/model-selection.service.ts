@@ -1,296 +1,161 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AIModel } from '../entities/ai-model.entity';
-import { AIUserPreference } from '../entities/ai-user-preference.entity';
-import {
-  AITaskCategory,
-  AITaskPriority,
-  AITaskComplexity,
-  AITaskRequest,
-  ModelSelectionResult,
-  AIProvider,
-  ModelCapability,
-} from '../types/ai-types';
+import { AITaskCategory } from '../entities/ai-task-category.entity';
 
-interface ModelScore {
+export interface ModelSelectionCriteria {
+  taskCategory?: string;
+  requiredCapabilities?: string[];
+  preferredCapabilities?: string[];
+  maxCostPer1mInput?: number;
+  maxCostPer1mOutput?: number;
+  minContextWindow?: number;
+  maxLatencyMs?: number;
+  prioritizeSpeed?: boolean;
+  prioritizeCost?: boolean;
+  prioritizeQuality?: boolean;
+  requiresVision?: boolean;
+  requiresImageGen?: boolean;
+  requiresWebSearch?: boolean;
+}
+
+export interface ModelRecommendation {
   model: AIModel;
   score: number;
-  reasons: string[];
+  reason: string;
+  alternatives?: AIModel[];
 }
 
 @Injectable()
 export class ModelSelectionService {
+  private readonly logger = new Logger(ModelSelectionService.name);
+
   constructor(
     @InjectRepository(AIModel)
-    private aiModelRepository: Repository<AIModel>,
-    @InjectRepository(AIUserPreference)
-    private userPreferenceRepository: Repository<AIUserPreference>,
+    private readonly aiModelRepository: Repository<AIModel>,
+    @InjectRepository(AITaskCategory)
+    private readonly taskCategoryRepository: Repository<AITaskCategory>,
   ) {}
 
   /**
-   * Intelligently select the best model for a task
+   * Select best model based on task category and criteria
    */
-  async selectBestModel(
-    userId: string,
-    taskRequest: AITaskRequest,
-  ): Promise<ModelSelectionResult> {
-    const {
-      category,
-      priority = AITaskPriority.BALANCED,
-      complexity = AITaskComplexity.MODERATE,
-      userPreferenceWeight = 0.3,
-    } = taskRequest;
-
-    // Get all active models
-    const availableModels = await this.aiModelRepository.find({
-      where: { isActive: true },
-    });
-
-    if (availableModels.length === 0) {
-      throw new Error('No active AI models available');
+  async selectModel(criteria: ModelSelectionCriteria): Promise<ModelRecommendation> {
+    // Get task category if provided
+    let taskCategory: AITaskCategory | null = null;
+    if (criteria.taskCategory) {
+      taskCategory = await this.taskCategoryRepository.findOne({
+        where: { categoryKey: criteria.taskCategory, isActive: true },
+      });
     }
 
-    // Score each model
-    const scoredModels: ModelScore[] = [];
+    // Build query
+    const queryBuilder = this.aiModelRepository
+      .createQueryBuilder('model')
+      .where('model.is_active = :isActive', { isActive: true });
 
-    for (const model of availableModels) {
-      const score = await this.calculateModelScore(
-        model,
-        category,
-        priority,
-        complexity,
-        userId,
-        userPreferenceWeight,
+    // Apply required capabilities
+    const requiredCapabilities = criteria.requiredCapabilities || taskCategory?.requiredCapabilities || [];
+    if (requiredCapabilities.length > 0) {
+      queryBuilder.andWhere('model.capabilities && :requiredCaps', {
+        requiredCaps: requiredCapabilities,
+      });
+    }
+
+    // Apply vision requirement
+    if (criteria.requiresVision) {
+      queryBuilder.andWhere('model.supports_vision = :supportsVision', { supportsVision: true });
+    }
+
+    // Apply image generation requirement
+    if (criteria.requiresImageGen) {
+      queryBuilder.andWhere('model.supports_image_gen = :supportsImageGen', { supportsImageGen: true });
+    }
+
+    // Apply web search requirement
+    if (criteria.requiresWebSearch) {
+      queryBuilder.andWhere('model.supports_web_search = :supportsWebSearch', {
+        supportsWebSearch: true,
+      });
+    }
+
+    // Apply cost constraints
+    if (criteria.maxCostPer1mInput) {
+      queryBuilder.andWhere(
+        '(model.cost_per_1m_input <= :maxInput OR model.cost_per_1m_input IS NULL)',
+        { maxInput: criteria.maxCostPer1mInput },
       );
-
-      scoredModels.push(score);
+    }
+    if (criteria.maxCostPer1mOutput) {
+      queryBuilder.andWhere(
+        '(model.cost_per_1m_output <= :maxOutput OR model.cost_per_1m_output IS NULL)',
+        { maxOutput: criteria.maxCostPer1mOutput },
+      );
     }
 
-    // Sort by score (descending)
+    // Apply context window requirement
+    if (criteria.minContextWindow) {
+      queryBuilder.andWhere('model.context_window >= :minContext', {
+        minContext: criteria.minContextWindow,
+      });
+    }
+
+    // Apply latency requirement
+    if (criteria.maxLatencyMs) {
+      queryBuilder.andWhere('(model.latency_ms <= :maxLatency OR model.latency_ms IS NULL)', {
+        maxLatency: criteria.maxLatencyMs,
+      });
+    }
+
+    // Order by priority
+    if (criteria.prioritizeSpeed) {
+      queryBuilder.orderBy('model.latency_ms', 'ASC', 'NULLS LAST');
+      queryBuilder.addOrderBy('model.throughput_tps', 'DESC', 'NULLS LAST');
+    } else if (criteria.prioritizeCost) {
+      queryBuilder.orderBy('model.cost_per_1m_input', 'ASC', 'NULLS LAST');
+      queryBuilder.addOrderBy('model.cost_per_1m_output', 'ASC', 'NULLS LAST');
+    } else if (criteria.prioritizeQuality) {
+      queryBuilder.orderBy('model.overall_quality_score', 'DESC', 'NULLS LAST');
+      queryBuilder.addOrderBy('model.reliability_score', 'DESC', 'NULLS LAST');
+    } else {
+      // Default: prioritize recommended models and then by priority rank
+      queryBuilder.orderBy('model.is_recommended', 'DESC');
+      queryBuilder.addOrderBy('model.priority_rank', 'ASC');
+    }
+
+    // Get top models
+    const models = await queryBuilder.limit(5).getMany();
+
+    if (models.length === 0) {
+      this.logger.error('No models found matching criteria', criteria);
+      throw new Error('No suitable AI models available for this task');
+    }
+
+    // Score models
+    const scoredModels = models.map((model) => ({
+      model,
+      score: this.calculateModelScore(model, criteria, taskCategory),
+    }));
+
+    // Sort by score
     scoredModels.sort((a, b) => b.score - a.score);
 
-    const bestModel = scoredModels[0];
+    const best = scoredModels[0];
+    const alternatives = scoredModels.slice(1, 4).map((sm) => sm.model);
 
-    if (!bestModel) {
-      throw new Error('Could not select a suitable model');
-    }
+    const reason = this.generateRecommendationReason(best.model, criteria, taskCategory);
 
-    return {
-      modelId: bestModel.model.modelId,
-      modelName: bestModel.model.modelName,
-      provider: bestModel.model.provider as AIProvider,
-      reason: bestModel.reasons.join(', '),
-      confidence: Math.min(bestModel.score / 100, 1),
-      estimatedCost: bestModel.model.costBucket as any,
-      estimatedSpeed: this.getSpeedCategory(bestModel.model.averageSpeedMs),
-      capabilities: bestModel.model.capabilities as ModelCapability[],
-    };
-  }
-
-  /**
-   * Calculate comprehensive score for a model
-   */
-  private async calculateModelScore(
-    model: AIModel,
-    category: AITaskCategory,
-    priority: AITaskPriority,
-    complexity: AITaskComplexity,
-    userId: string,
-    userPreferenceWeight: number,
-  ): Promise<ModelScore> {
-    let totalScore = 0;
-    const reasons: string[] = [];
-
-    // Base score from model quality and reliability
-    const baseScore = this.calculateBaseScore(model);
-    totalScore += baseScore * 20; // Max 20 points
-    if (baseScore > 0.8) reasons.push('High quality model');
-
-    // Task category suitability
-    const categorySuitability = this.calculateCategorySuitability(model, category);
-    totalScore += categorySuitability * 30; // Max 30 points
-    if (categorySuitability > 0.7) reasons.push('Well-suited for this task');
-
-    // Priority alignment (speed vs quality)
-    const priorityScore = this.calculatePriorityScore(model, priority);
-    totalScore += priorityScore * 20; // Max 20 points
-    if (priorityScore > 0.7) {
-      if (priority === AITaskPriority.SPEED) reasons.push('Fast response time');
-      if (priority === AITaskPriority.QUALITY) reasons.push('High-quality output');
-    }
-
-    // Complexity handling
-    const complexityScore = this.calculateComplexityScore(model, complexity);
-    totalScore += complexityScore * 15; // Max 15 points
-
-    // User preference (if available)
-    const userPrefScore = await this.getUserPreferenceScore(userId, model.id, category);
-    totalScore += userPrefScore * userPreferenceWeight * 15; // Max 15 points (weighted)
-    if (userPrefScore > 0.7) reasons.push('You liked this model before');
-
-    // Boost for recommended models
-    if (model.isRecommended) {
-      totalScore += 5;
-      reasons.push('Recommended by Business Pro');
-    }
-
-    // Priority rank bonus
-    totalScore += model.priorityRank * 0.5;
-
-    return {
-      model,
-      score: totalScore,
-      reasons,
-    };
-  }
-
-  /**
-   * Base score from model's overall quality and reliability
-   */
-  private calculateBaseScore(model: AIModel): number {
-    const quality = model.overallQualityScore || 0.7;
-    const reliability = model.reliabilityScore || 0.8;
-    return (quality / 5 + reliability) / 2; // Normalize to 0-1
-  }
-
-  /**
-   * Calculate how suitable the model is for the task category
-   */
-  private calculateCategorySuitability(
-    model: AIModel,
-    category: AITaskCategory,
-  ): number {
-    const categoryMap: Record<string, string[]> = {
-      [AITaskCategory.CONTENT_CAPTION]: [ModelCapability.TEXT_GENERATION],
-      [AITaskCategory.CONTENT_HOOKS]: [ModelCapability.TEXT_GENERATION],
-      [AITaskCategory.CONTENT_HASHTAGS]: [ModelCapability.TEXT_GENERATION],
-      [AITaskCategory.CONTENT_IDEAS]: [ModelCapability.TEXT_GENERATION, ModelCapability.TEXT_REASONING],
-      [AITaskCategory.CONTENT_SCRIPT]: [ModelCapability.TEXT_GENERATION, ModelCapability.TEXT_REASONING],
-      [AITaskCategory.IMAGE_PHOTO]: [ModelCapability.IMAGE_GENERATION],
-      [AITaskCategory.IMAGE_ILLUSTRATION]: [ModelCapability.IMAGE_GENERATION],
-      [AITaskCategory.IMAGE_LOGO]: [ModelCapability.IMAGE_GENERATION],
-      [AITaskCategory.IMAGE_SOCIAL]: [ModelCapability.IMAGE_GENERATION],
-      [AITaskCategory.VIDEO_SHORT]: [ModelCapability.VIDEO_GENERATION],
-      [AITaskCategory.VIDEO_LONG]: [ModelCapability.VIDEO_GENERATION],
-      [AITaskCategory.VIDEO_ANIMATION]: [ModelCapability.VIDEO_GENERATION],
-      [AITaskCategory.ANALYSIS_SENTIMENT]: [ModelCapability.TEXT_REASONING],
-      [AITaskCategory.ANALYSIS_ENGAGEMENT]: [ModelCapability.TEXT_REASONING],
-      [AITaskCategory.TRANSLATION]: [ModelCapability.TRANSLATION],
-    };
-
-    const requiredCapabilities = categoryMap[category] || [ModelCapability.TEXT_GENERATION];
-    const modelCapabilities = model.capabilities || [];
-
-    const hasAllRequired = requiredCapabilities.every(cap =>
-      modelCapabilities.includes(cap),
+    this.logger.log(
+      `Selected model: ${best.model.modelId} (score: ${best.score.toFixed(2)}) for ${criteria.taskCategory || 'custom task'}`,
     );
 
-    if (!hasAllRequired) return 0.1;
-
-    const matchCount = requiredCapabilities.filter(cap =>
-      modelCapabilities.includes(cap),
-    ).length;
-
-    return matchCount / requiredCapabilities.length;
-  }
-
-  /**
-   * Score based on priority (speed vs quality)
-   */
-  private calculatePriorityScore(model: AIModel, priority: AITaskPriority): number {
-    const avgSpeed = model.averageSpeedMs || 3000;
-    const costBucket = model.costBucket;
-
-    if (priority === AITaskPriority.SPEED) {
-      // Prefer fast, cheap models
-      const speedScore = avgSpeed < 2000 ? 1 : avgSpeed < 5000 ? 0.7 : 0.4;
-      const costScore = costBucket === 'low' ? 1 : costBucket === 'medium' ? 0.6 : 0.3;
-      return (speedScore + costScore) / 2;
-    }
-
-    if (priority === AITaskPriority.QUALITY) {
-      // Prefer high-quality models, cost less important
-      const qualityScore = (model.overallQualityScore || 3.5) / 5;
-      return qualityScore;
-    }
-
-    // BALANCED - middle ground
-    const speedScore = avgSpeed < 3000 ? 1 : avgSpeed < 7000 ? 0.7 : 0.4;
-    const qualityScore = (model.overallQualityScore || 3.5) / 5;
-    const costScore = costBucket === 'medium' ? 1 : costBucket === 'low' ? 0.9 : 0.6;
-
-    return (speedScore + qualityScore + costScore) / 3;
-  }
-
-  /**
-   * Score based on complexity handling
-   */
-  private calculateComplexityScore(
-    model: AIModel,
-    complexity: AITaskComplexity,
-  ): number {
-    const contextWindow = model.contextWindow || 8000;
-    const hasReasoning = model.capabilities?.includes('text_reasoning');
-
-    if (complexity === AITaskComplexity.SIMPLE) {
-      // Simple tasks - any model works, prefer cheaper
-      return model.costBucket === 'low' ? 1 : 0.8;
-    }
-
-    if (complexity === AITaskComplexity.COMPLEX) {
-      // Complex tasks - need powerful models
-      if (!hasReasoning) return 0.3;
-      if (contextWindow < 32000) return 0.5;
-      return contextWindow > 100000 ? 1 : 0.8;
-    }
-
-    // MODERATE - middle ground
-    return hasReasoning ? 0.9 : 0.7;
-  }
-
-  /**
-   * Get user's preference score for this model + category
-   */
-  private async getUserPreferenceScore(
-    userId: string,
-    modelId: string,
-    category: AITaskCategory,
-  ): Promise<number> {
-    try {
-      const preference = await this.userPreferenceRepository.findOne({
-        where: {
-          userId,
-          modelId,
-          categoryKey: category,
-        },
-      });
-
-      if (!preference) return 0.5; // Neutral if no history
-
-      // Calculate score based on user's past interactions
-      const likeRatio = preference.likes / (preference.likes + preference.dislikes + 1);
-      const regenerateRatio = preference.regenerates / (preference.totalInteractions + 1);
-      const qualityScore = (preference.averageQualityRating || 3) / 5;
-
-      // High likes + low regenerates + high quality = high score
-      const score =
-        likeRatio * 0.4 + (1 - regenerateRatio) * 0.3 + qualityScore * 0.3;
-
-      return Math.max(0, Math.min(1, score));
-    } catch (error) {
-      return 0.5; // Neutral on error
-    }
-  }
-
-  /**
-   * Categorize speed
-   */
-  private getSpeedCategory(avgSpeedMs: number | null): 'fast' | 'medium' | 'slow' {
-    if (!avgSpeedMs) return 'medium';
-    if (avgSpeedMs < 2000) return 'fast';
-    if (avgSpeedMs < 5000) return 'medium';
-    return 'slow';
+    return {
+      model: best.model,
+      score: best.score,
+      reason,
+      alternatives,
+    };
   }
 
   /**
@@ -298,38 +163,145 @@ export class ModelSelectionService {
    */
   async getModelById(modelId: string): Promise<AIModel | null> {
     return this.aiModelRepository.findOne({
-      where: { modelId },
+      where: { modelId, isActive: true },
     });
   }
 
   /**
-   * Get all active models for a category
+   * Get all models for a capability
    */
-  async getModelsForCategory(category: AITaskCategory): Promise<AIModel[]> {
-    const requiredCaps = this.getCategoryRequirements(category);
-
-    const models = await this.aiModelRepository
+  async getModelsByCapability(capability: string): Promise<AIModel[]> {
+    return this.aiModelRepository
       .createQueryBuilder('model')
-      .where('model.is_active = :active', { active: true })
-      .andWhere('model.capabilities @> :caps', { caps: requiredCaps })
-      .orderBy('model.priority_rank', 'DESC')
-      .addOrderBy('model.is_recommended', 'DESC')
+      .where('model.is_active = :isActive', { isActive: true })
+      .andWhere(':capability = ANY(model.capabilities)', { capability })
+      .orderBy('model.priority_rank', 'ASC')
       .getMany();
-
-    return models;
   }
 
   /**
-   * Get required capabilities for category
+   * Get recommended models
    */
-  private getCategoryRequirements(category: AITaskCategory): string[] {
-    const map: Record<string, string[]> = {
-      [AITaskCategory.CONTENT_CAPTION]: [ModelCapability.TEXT_GENERATION],
-      [AITaskCategory.CONTENT_IDEAS]: [ModelCapability.TEXT_GENERATION, ModelCapability.TEXT_REASONING],
-      [AITaskCategory.IMAGE_SOCIAL]: [ModelCapability.IMAGE_GENERATION],
-      [AITaskCategory.VIDEO_SHORT]: [ModelCapability.VIDEO_GENERATION],
-    };
+  async getRecommendedModels(): Promise<AIModel[]> {
+    return this.aiModelRepository.find({
+      where: { isActive: true, isRecommended: true },
+      order: { priorityRank: 'ASC' },
+    });
+  }
 
-    return map[category] || [ModelCapability.TEXT_GENERATION];
+  /**
+   * Calculate model score based on criteria
+   */
+  private calculateModelScore(
+    model: AIModel,
+    criteria: ModelSelectionCriteria,
+    taskCategory: AITaskCategory | null,
+  ): number {
+    let score = 0;
+
+    // Base score from priority rank (lower is better)
+    score += 100 - model.priorityRank;
+
+    // Boost recommended models
+    if (model.isRecommended) {
+      score += 20;
+    }
+
+    // Preferred capabilities from task category
+    const preferredCapabilities = criteria.preferredCapabilities || taskCategory?.preferredCapabilities || [];
+    const matchedPreferred = preferredCapabilities.filter((cap) => model.capabilities.includes(cap));
+    score += matchedPreferred.length * 10;
+
+    // Speed priority
+    if (criteria.prioritizeSpeed && model.latencyMs) {
+      score += Math.max(0, 50 - model.latencyMs / 100);
+    }
+    if (criteria.prioritizeSpeed && model.throughputTps) {
+      score += Math.min(30, model.throughputTps / 10);
+    }
+
+    // Cost priority
+    if (criteria.prioritizeCost) {
+      if (model.costBucket === 'low') score += 30;
+      else if (model.costBucket === 'medium') score += 15;
+    }
+
+    // Quality priority
+    if (criteria.prioritizeQuality) {
+      if (model.overallQualityScore) {
+        score += model.overallQualityScore * 20;
+      }
+      if (model.reliabilityScore) {
+        score += model.reliabilityScore * 15;
+      }
+    }
+
+    // Use case match
+    if (criteria.taskCategory && model.useCases.includes(criteria.taskCategory)) {
+      score += 25;
+    }
+
+    return score;
+  }
+
+  /**
+   * Generate reason for recommendation
+   */
+  private generateRecommendationReason(
+    model: AIModel,
+    criteria: ModelSelectionCriteria,
+    taskCategory: AITaskCategory | null,
+  ): string {
+    const reasons: string[] = [];
+
+    if (criteria.prioritizeSpeed) {
+      reasons.push(`optimized for speed (${model.latencyMs}ms latency)`);
+    }
+    if (criteria.prioritizeCost) {
+      reasons.push(`cost-effective (${model.costBucket} cost bucket)`);
+    }
+    if (criteria.prioritizeQuality) {
+      reasons.push('highest quality for this task');
+    }
+    if (criteria.requiresVision) {
+      reasons.push('supports vision/multimodal input');
+    }
+    if (criteria.requiresImageGen) {
+      reasons.push('can generate images');
+    }
+    if (model.isRecommended) {
+      reasons.push('recommended for production use');
+    }
+    if (taskCategory) {
+      reasons.push(`optimized for ${taskCategory.categoryName}`);
+    }
+
+    return reasons.length > 0
+      ? `${model.modelName}: ${reasons.join(', ')}`
+      : `${model.modelName}: ${model.description || 'suitable for this task'}`;
+  }
+
+  /**
+   * Get cost estimate for a task
+   */
+  async estimateCost(
+    modelId: string,
+    inputTokens: number,
+    outputTokens: number,
+  ): Promise<{ inputCost: number; outputCost: number; totalCost: number }> {
+    const model = await this.getModelById(modelId);
+    if (!model) {
+      throw new Error(`Model not found: ${modelId}`);
+    }
+
+    const inputCost = (model.costPer1mInput || 0) * (inputTokens / 1_000_000);
+    const outputCost = (model.costPer1mOutput || 0) * (outputTokens / 1_000_000);
+    const totalCost = inputCost + outputCost;
+
+    return {
+      inputCost,
+      outputCost,
+      totalCost,
+    };
   }
 }

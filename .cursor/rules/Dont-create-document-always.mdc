@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+Do NOT create documents, canvases, files, or structured write-ups for minor code edits, small fixes, or quick changes. Only create a full document or separate file when:  I explicitly say “create a document/file/canvas”  The output is a large standalone project/file meant for reuse  I clearly indicate I need something formal, shareable, or printable  Otherwise:  Respond directly in chat  Provide only the changed code/snippet if possible  Avoid reformatting everything into a document unless requested
