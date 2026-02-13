@@ -24,6 +24,7 @@ export * from './analytics/analytics';
 export * from './authentication/authentication';
 export * from './content/content';
 export * from './dashboard/dashboard';
+export * from './health/health';
 export * from './platforms/platforms';
 export * from './schemas';
 export * from './users/users';

@@ -19,6 +19,10 @@ import type {
 import type {
   AIControllerGetSuggestionsParams,
   FeedbackDtoDTO,
+  GenerateCaptionRequestDTO,
+  GenerateHashtagsRequestDTO,
+  GenerateHooksRequestDTO,
+  GenerateIdeasRequestDTO,
   TaskRequestDtoDTO,
 } from '.././schemas';
 
@@ -467,8 +471,17 @@ export function useAIControllerGetModelStats<
 /**
  * @summary Generate 5 content ideas/storylines
  */
-export const aIControllerGenerateIdeas = (signal?: AbortSignal) => {
-  return customAxiosInstance<void>({ url: `/api/v1/ai/generate/ideas`, method: 'POST', signal });
+export const aIControllerGenerateIdeas = (
+  generateIdeasRequestDTO: GenerateIdeasRequestDTO,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/ai/generate/ideas`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: generateIdeasRequestDTO,
+    signal,
+  });
 };
 
 export const getAIControllerGenerateIdeasMutationOptions = <
@@ -478,13 +491,13 @@ export const getAIControllerGenerateIdeasMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof aIControllerGenerateIdeas>>,
     TError,
-    void,
+    { data: GenerateIdeasRequestDTO },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof aIControllerGenerateIdeas>>,
   TError,
-  void,
+  { data: GenerateIdeasRequestDTO },
   TContext
 > => {
   const mutationKey = ['aIControllerGenerateIdeas'];
@@ -496,9 +509,11 @@ export const getAIControllerGenerateIdeasMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof aIControllerGenerateIdeas>>,
-    void
-  > = () => {
-    return aIControllerGenerateIdeas();
+    { data: GenerateIdeasRequestDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return aIControllerGenerateIdeas(data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -507,7 +522,7 @@ export const getAIControllerGenerateIdeasMutationOptions = <
 export type AIControllerGenerateIdeasMutationResult = NonNullable<
   Awaited<ReturnType<typeof aIControllerGenerateIdeas>>
 >;
-
+export type AIControllerGenerateIdeasMutationBody = GenerateIdeasRequestDTO;
 export type AIControllerGenerateIdeasMutationError = unknown;
 
 /**
@@ -517,13 +532,13 @@ export const useAIControllerGenerateIdeas = <TError = unknown, TContext = unknow
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof aIControllerGenerateIdeas>>,
     TError,
-    void,
+    { data: GenerateIdeasRequestDTO },
     TContext
   >;
 }): UseMutationResult<
   Awaited<ReturnType<typeof aIControllerGenerateIdeas>>,
   TError,
-  void,
+  { data: GenerateIdeasRequestDTO },
   TContext
 > => {
   const mutationOptions = getAIControllerGenerateIdeasMutationOptions(options);
@@ -533,8 +548,17 @@ export const useAIControllerGenerateIdeas = <TError = unknown, TContext = unknow
 /**
  * @summary Generate social media caption
  */
-export const aIControllerGenerateCaption = (signal?: AbortSignal) => {
-  return customAxiosInstance<void>({ url: `/api/v1/ai/generate/caption`, method: 'POST', signal });
+export const aIControllerGenerateCaption = (
+  generateCaptionRequestDTO: GenerateCaptionRequestDTO,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/ai/generate/caption`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: generateCaptionRequestDTO,
+    signal,
+  });
 };
 
 export const getAIControllerGenerateCaptionMutationOptions = <
@@ -544,13 +568,13 @@ export const getAIControllerGenerateCaptionMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof aIControllerGenerateCaption>>,
     TError,
-    void,
+    { data: GenerateCaptionRequestDTO },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof aIControllerGenerateCaption>>,
   TError,
-  void,
+  { data: GenerateCaptionRequestDTO },
   TContext
 > => {
   const mutationKey = ['aIControllerGenerateCaption'];
@@ -562,9 +586,11 @@ export const getAIControllerGenerateCaptionMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof aIControllerGenerateCaption>>,
-    void
-  > = () => {
-    return aIControllerGenerateCaption();
+    { data: GenerateCaptionRequestDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return aIControllerGenerateCaption(data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -573,7 +599,7 @@ export const getAIControllerGenerateCaptionMutationOptions = <
 export type AIControllerGenerateCaptionMutationResult = NonNullable<
   Awaited<ReturnType<typeof aIControllerGenerateCaption>>
 >;
-
+export type AIControllerGenerateCaptionMutationBody = GenerateCaptionRequestDTO;
 export type AIControllerGenerateCaptionMutationError = unknown;
 
 /**
@@ -583,13 +609,13 @@ export const useAIControllerGenerateCaption = <TError = unknown, TContext = unkn
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof aIControllerGenerateCaption>>,
     TError,
-    void,
+    { data: GenerateCaptionRequestDTO },
     TContext
   >;
 }): UseMutationResult<
   Awaited<ReturnType<typeof aIControllerGenerateCaption>>,
   TError,
-  void,
+  { data: GenerateCaptionRequestDTO },
   TContext
 > => {
   const mutationOptions = getAIControllerGenerateCaptionMutationOptions(options);
@@ -599,8 +625,17 @@ export const useAIControllerGenerateCaption = <TError = unknown, TContext = unkn
 /**
  * @summary Generate attention-grabbing hooks
  */
-export const aIControllerGenerateHooks = (signal?: AbortSignal) => {
-  return customAxiosInstance<void>({ url: `/api/v1/ai/generate/hooks`, method: 'POST', signal });
+export const aIControllerGenerateHooks = (
+  generateHooksRequestDTO: GenerateHooksRequestDTO,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/ai/generate/hooks`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: generateHooksRequestDTO,
+    signal,
+  });
 };
 
 export const getAIControllerGenerateHooksMutationOptions = <
@@ -610,13 +645,13 @@ export const getAIControllerGenerateHooksMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof aIControllerGenerateHooks>>,
     TError,
-    void,
+    { data: GenerateHooksRequestDTO },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof aIControllerGenerateHooks>>,
   TError,
-  void,
+  { data: GenerateHooksRequestDTO },
   TContext
 > => {
   const mutationKey = ['aIControllerGenerateHooks'];
@@ -628,9 +663,11 @@ export const getAIControllerGenerateHooksMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof aIControllerGenerateHooks>>,
-    void
-  > = () => {
-    return aIControllerGenerateHooks();
+    { data: GenerateHooksRequestDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return aIControllerGenerateHooks(data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -639,7 +676,7 @@ export const getAIControllerGenerateHooksMutationOptions = <
 export type AIControllerGenerateHooksMutationResult = NonNullable<
   Awaited<ReturnType<typeof aIControllerGenerateHooks>>
 >;
-
+export type AIControllerGenerateHooksMutationBody = GenerateHooksRequestDTO;
 export type AIControllerGenerateHooksMutationError = unknown;
 
 /**
@@ -649,13 +686,13 @@ export const useAIControllerGenerateHooks = <TError = unknown, TContext = unknow
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof aIControllerGenerateHooks>>,
     TError,
-    void,
+    { data: GenerateHooksRequestDTO },
     TContext
   >;
 }): UseMutationResult<
   Awaited<ReturnType<typeof aIControllerGenerateHooks>>,
   TError,
-  void,
+  { data: GenerateHooksRequestDTO },
   TContext
 > => {
   const mutationOptions = getAIControllerGenerateHooksMutationOptions(options);
@@ -665,8 +702,17 @@ export const useAIControllerGenerateHooks = <TError = unknown, TContext = unknow
 /**
  * @summary Generate SEO hashtags
  */
-export const aIControllerGenerateHashtags = (signal?: AbortSignal) => {
-  return customAxiosInstance<void>({ url: `/api/v1/ai/generate/hashtags`, method: 'POST', signal });
+export const aIControllerGenerateHashtags = (
+  generateHashtagsRequestDTO: GenerateHashtagsRequestDTO,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/ai/generate/hashtags`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: generateHashtagsRequestDTO,
+    signal,
+  });
 };
 
 export const getAIControllerGenerateHashtagsMutationOptions = <
@@ -676,13 +722,13 @@ export const getAIControllerGenerateHashtagsMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof aIControllerGenerateHashtags>>,
     TError,
-    void,
+    { data: GenerateHashtagsRequestDTO },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof aIControllerGenerateHashtags>>,
   TError,
-  void,
+  { data: GenerateHashtagsRequestDTO },
   TContext
 > => {
   const mutationKey = ['aIControllerGenerateHashtags'];
@@ -694,9 +740,11 @@ export const getAIControllerGenerateHashtagsMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof aIControllerGenerateHashtags>>,
-    void
-  > = () => {
-    return aIControllerGenerateHashtags();
+    { data: GenerateHashtagsRequestDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return aIControllerGenerateHashtags(data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -705,7 +753,7 @@ export const getAIControllerGenerateHashtagsMutationOptions = <
 export type AIControllerGenerateHashtagsMutationResult = NonNullable<
   Awaited<ReturnType<typeof aIControllerGenerateHashtags>>
 >;
-
+export type AIControllerGenerateHashtagsMutationBody = GenerateHashtagsRequestDTO;
 export type AIControllerGenerateHashtagsMutationError = unknown;
 
 /**
@@ -715,13 +763,13 @@ export const useAIControllerGenerateHashtags = <TError = unknown, TContext = unk
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof aIControllerGenerateHashtags>>,
     TError,
-    void,
+    { data: GenerateHashtagsRequestDTO },
     TContext
   >;
 }): UseMutationResult<
   Awaited<ReturnType<typeof aIControllerGenerateHashtags>>,
   TError,
-  void,
+  { data: GenerateHashtagsRequestDTO },
   TContext
 > => {
   const mutationOptions = getAIControllerGenerateHashtagsMutationOptions(options);

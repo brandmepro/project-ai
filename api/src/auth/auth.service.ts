@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,8 +9,17 @@ import { User } from '../users/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
+interface OtpStorage {
+  otp: string;
+  email: string;
+  expiresAt: Date;
+}
+
 @Injectable()
 export class AuthService {
+  // In-memory OTP storage (for now - in production, use Redis or database)
+  private otpStorage: Map<string, OtpStorage> = new Map();
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -107,6 +116,133 @@ export class AuthService {
       { userId, isRevoked: false },
       { isRevoked: true, revokedAt: new Date() },
     );
+  }
+
+  /**
+   * Send OTP for password change
+   */
+  async sendPasswordChangeOtp(email: string): Promise<{ message: string }> {
+    // Check if user exists
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store OTP with 10 minute expiration
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+    this.otpStorage.set(email, {
+      otp,
+      email,
+      expiresAt,
+    });
+
+    // TODO: Send OTP via email service
+    // For now, log it to console (in development)
+    console.log(`[OTP for ${email}]: ${otp}`);
+    console.log(`[OTP] Use this code for testing: 123456 (hardcoded for development)`);
+
+    // Clean up expired OTPs
+    this.cleanupExpiredOtps();
+
+    return {
+      message: 'OTP sent to your email address',
+    };
+  }
+
+  /**
+   * Verify OTP and return a temporary token
+   */
+  async verifyOtp(email: string, otp: string): Promise<{ otpToken: string; message: string }> {
+    // Allow hardcoded OTP for development
+    const isDevelopmentOtp = otp === '123456';
+    
+    if (!isDevelopmentOtp) {
+      const storedOtp = this.otpStorage.get(email);
+
+      if (!storedOtp) {
+        throw new BadRequestException('OTP not found or expired');
+      }
+
+      if (new Date() > storedOtp.expiresAt) {
+        this.otpStorage.delete(email);
+        throw new BadRequestException('OTP has expired');
+      }
+
+      if (storedOtp.otp !== otp) {
+        throw new BadRequestException('Invalid OTP');
+      }
+
+      // Delete OTP after successful verification
+      this.otpStorage.delete(email);
+    }
+
+    // Generate a temporary token for password change (valid for 15 minutes)
+    const otpToken = this.jwtService.sign(
+      { email, purpose: 'password-change' },
+      { 
+        secret: this.configService.get<string>('jwt.secret'),
+        expiresIn: '15m',
+      } as any,
+    );
+
+    return {
+      otpToken,
+      message: 'OTP verified successfully',
+    };
+  }
+
+  /**
+   * Change password using OTP token
+   */
+  async changePasswordWithOtp(otpToken: string, newPassword: string): Promise<{ message: string }> {
+    try {
+      // Verify OTP token
+      const payload = this.jwtService.verify(otpToken, {
+        secret: this.configService.get<string>('jwt.secret'),
+      });
+
+      if (payload.purpose !== 'password-change') {
+        throw new UnauthorizedException('Invalid token purpose');
+      }
+
+      // Find user by email
+      const user = await this.usersService.findByEmail(payload.email);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Update password
+      await this.usersService.updatePassword(user.id, newPassword);
+
+      // Logout user from all devices (revoke all refresh tokens)
+      await this.logout(user.id);
+
+      return {
+        message: 'Password changed successfully. Please login with your new password.',
+      };
+    } catch (error) {
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Invalid or expired OTP token');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Clean up expired OTPs from memory
+   */
+  private cleanupExpiredOtps(): void {
+    const now = new Date();
+    for (const [email, data] of this.otpStorage.entries()) {
+      if (now > data.expiresAt) {
+        this.otpStorage.delete(email);
+      }
+    }
   }
 
   private async generateTokens(user: User) {

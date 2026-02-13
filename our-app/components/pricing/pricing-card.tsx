@@ -51,11 +51,14 @@ export function PricingCard({ plan, index }: PricingCardProps) {
         className={`
           p-6 h-full relative overflow-hidden
           ${isHighlighted 
-            ? 'bg-gradient-to-br from-primary to-accent border-2 border-primary' 
+            ? 'bg-gradient-to-br from-primary to-accent border-2 border-primary shadow-xl' 
             : 'bg-card border border-border'
           }
         `}
         withBorder={false}
+        style={isHighlighted ? {
+          background: 'linear-gradient(135deg, rgb(111 66 193) 0%, rgb(139 92 246) 100%)'
+        } : undefined}
       >
         {/* Badge */}
         {plan.badge && (
@@ -188,6 +191,8 @@ export function PricingCard({ plan, index }: PricingCardProps) {
             size="md"
             variant={isHighlighted ? 'white' : 'filled'}
             color={isHighlighted ? undefined : 'violet'}
+            component="a"
+            href={plan.price === 0 ? '/dashboard' : `/checkout?plan=${plan.name.toLowerCase()}-${plan.period}`}
           >
             {plan.price === 0 ? 'Get Started Free' : 'Upgrade Now'}
           </Button>

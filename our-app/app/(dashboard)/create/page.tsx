@@ -12,7 +12,6 @@ import {
   IconLanguage,
   IconPalette,
   IconCalendar,
-  IconCheck,
   IconChevronLeft,
   IconChevronRight,
 } from '@tabler/icons-react'
@@ -245,11 +244,9 @@ export default function CreatePage() {
                             : 'bg-muted-foreground/10'
                         }
                       `}>
-                        {isCompleted && !isActive ? (
-                          <IconCheck size={12} stroke={2.5} />
-                        ) : (
-                          <Icon size={12} stroke={1.5} />
-                        )}
+                        <Text size="10px" fw={700} className={isActive ? 'text-white' : ''}>
+                          {step.id + 1}
+                        </Text>
                       </div>
                       <Text size="xs" fw={500}>{step.shortTitle}</Text>
                     </motion.button>

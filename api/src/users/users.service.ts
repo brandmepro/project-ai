@@ -12,6 +12,12 @@ import { BusinessType } from '../common/enums';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateNotificationsDto } from './dto/update-notifications.dto';
 import { UpdateBusinessProfileDto } from './dto/update-business-profile.dto';
+import { UpdateAiSettingsDto } from './dto/update-ai-settings.dto';
+import { UpdateSchedulingSettingsDto } from './dto/update-scheduling-settings.dto';
+import { UpdateAnalyticsSettingsDto } from './dto/update-analytics-settings.dto';
+import { UpdatePrivacySettingsDto } from './dto/update-privacy-settings.dto';
+import { UpdateAdvancedSettingsDto } from './dto/update-advanced-settings.dto';
+import { UpdatePlatformPreferencesDto } from '../platforms/dto/update-platform-preferences.dto';
 
 @Injectable()
 export class UsersService {
@@ -226,5 +232,261 @@ export class UsersService {
     }
 
     return user.notificationSettings;
+  }
+
+  /**
+   * Update password without requiring current password (used for OTP-based password reset)
+   */
+  async updatePassword(userId: string, newPassword: string): Promise<void> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.usersRepository.save(user);
+  }
+
+  // AI Settings
+  async getAiSettings(userId: string) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user.aiSettings;
+  }
+
+  async updateAiSettings(
+    userId: string,
+    updateDto: UpdateAiSettingsDto,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.aiSettings = {
+      ...user.aiSettings,
+      ...updateDto,
+    };
+
+    return this.usersRepository.save(user);
+  }
+
+  // Scheduling Settings
+  async getSchedulingSettings(userId: string) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user.schedulingSettings;
+  }
+
+  async updateSchedulingSettings(
+    userId: string,
+    updateDto: UpdateSchedulingSettingsDto,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.schedulingSettings = {
+      ...user.schedulingSettings,
+      ...updateDto,
+    };
+
+    return this.usersRepository.save(user);
+  }
+
+  // Analytics Settings
+  async getAnalyticsSettings(userId: string) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user.analyticsSettings;
+  }
+
+  async updateAnalyticsSettings(
+    userId: string,
+    updateDto: UpdateAnalyticsSettingsDto,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.analyticsSettings = {
+      ...user.analyticsSettings,
+      ...updateDto,
+    };
+
+    return this.usersRepository.save(user);
+  }
+
+  // Privacy Settings
+  async getPrivacySettings(userId: string) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user.privacySettings;
+  }
+
+  async updatePrivacySettings(
+    userId: string,
+    updateDto: UpdatePrivacySettingsDto,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.privacySettings = {
+      ...user.privacySettings,
+      ...updateDto,
+    };
+
+    return this.usersRepository.save(user);
+  }
+
+  // Advanced Settings
+  async getAdvancedSettings(userId: string) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user.advancedSettings;
+  }
+
+  async updateAdvancedSettings(
+    userId: string,
+    updateDto: UpdateAdvancedSettingsDto,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.advancedSettings = {
+      ...user.advancedSettings,
+      ...updateDto,
+    };
+
+    return this.usersRepository.save(user);
+  }
+
+  // Reset all settings to defaults
+  async resetAllSettings(userId: string): Promise<void> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.preferences = {
+      language: 'english',
+      tone: 'friendly',
+      autoSave: true,
+      darkMode: false,
+    };
+
+    user.notificationSettings = {
+      email: true,
+      push: true,
+      contentReady: true,
+      weeklyReport: true,
+      aiSuggestions: true,
+    };
+
+    user.aiSettings = {
+      aiPriority: 'balanced',
+      autoEnhance: true,
+      smartHashtags: true,
+      contentNotifications: true,
+      experimentalFeatures: false,
+      visualStyle: 'clean',
+      captionLength: 'medium',
+      emojiUsage: 'moderate',
+    };
+
+    user.schedulingSettings = {
+      autoScheduling: true,
+      optimizeTiming: true,
+      minBuffer: 2,
+      maxPostsPerDay: 3,
+      postingSchedule: {
+        monday: ['09:00', '14:00', '19:00'],
+        tuesday: ['09:00', '14:00', '19:00'],
+        wednesday: ['09:00', '14:00', '19:00'],
+        thursday: ['09:00', '14:00', '19:00'],
+        friday: ['09:00', '14:00', '19:00'],
+        saturday: ['11:00', '17:00'],
+        sunday: ['11:00', '17:00'],
+      },
+    };
+
+    user.analyticsSettings = {
+      weeklyReportDay: 'monday',
+      includeReach: true,
+      includeEngagement: true,
+      includeGrowth: true,
+      includeTopPosts: true,
+      trackClicks: true,
+      trackVisits: true,
+      trackDemographics: false,
+    };
+
+    user.privacySettings = {
+      storeDrafts: true,
+      cacheContent: true,
+      analyticsCollection: true,
+      profileVisibility: 'public',
+      shareAnalytics: 'team',
+    };
+
+    user.advancedSettings = {
+      debugMode: false,
+      apiLogs: false,
+      betaFeatures: false,
+      aiModelTesting: false,
+      imageQuality: 'high',
+      cacheDuration: 7,
+    };
+
+    user.platformPreferences = {
+      autoCrosspost: true,
+      platformOptimizations: true,
+      tagLocation: false,
+    };
+
+    await this.usersRepository.save(user);
+  }
+
+  // Platform Preferences
+  async getPlatformPreferences(userId: string) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user.platformPreferences;
+  }
+
+  async updatePlatformPreferences(
+    userId: string,
+    updateDto: UpdatePlatformPreferencesDto,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.platformPreferences = {
+      ...user.platformPreferences,
+      ...updateDto,
+    };
+
+    return this.usersRepository.save(user);
   }
 }

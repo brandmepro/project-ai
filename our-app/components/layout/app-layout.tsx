@@ -48,7 +48,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
   )
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={{ overflow: 'visible' }}>
       {/* Desktop Sidebar - hidden on mobile */}
       <div className="hidden lg:block">
         <Sidebar />
@@ -59,6 +59,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
         className="flex flex-col min-h-screen transition-all duration-200 ease-in-out"
         style={{
           marginLeft: 0,
+          overflow: 'visible',
         }}
       >
         <style jsx global>{`

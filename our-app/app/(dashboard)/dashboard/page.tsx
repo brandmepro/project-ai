@@ -38,7 +38,10 @@ export default function DashboardPage() {
     )
   }
   
-  const { contentStats, overview, recentContent } = dashboardData || {}
+  const dashboardStats = (dashboardData as any) || {}
+  const contentStats = dashboardStats.contentStats || {}
+  const overview = dashboardStats.overview || {}
+  const recentContent = dashboardStats.recentContent || []
   const userName = (userProfile as any)?.name || (userProfile as any)?.businessName || (userProfile as any)?.email?.split('@')[0] || 'User'
 
   return (

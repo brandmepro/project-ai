@@ -248,8 +248,8 @@ export function StepTimeline({ className, mobileMode = false }: StepTimelineProp
               </Text>
               <DatePickerInput
                 placeholder="Select date"
-                value={createFlow.scheduledDate}
-                onChange={(date) => updateCreateFlow({ scheduledDate: date })}
+                value={createFlow.scheduledDate as Date | null}
+                onChange={(date) => updateCreateFlow({ scheduledDate: date as Date | null })}
                 minDate={new Date()}
                 size="md"
                 leftSection={<IconCalendar size={16} className="text-primary" />}
@@ -385,11 +385,9 @@ export function StepTimeline({ className, mobileMode = false }: StepTimelineProp
                       }
                     `}
                   >
-                    {isCompleted ? (
-                      <IconCheck size={16} stroke={2} />
-                    ) : (
-                      <Icon size={16} stroke={1.5} />
-                    )}
+                    <Text size="sm" fw={600}>
+                      {step.id + 1}
+                    </Text>
                   </Box>
                   
                   <Box className="flex-1 min-w-0">

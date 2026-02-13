@@ -14,6 +14,8 @@
     "dev:web": "bun --filter my-v0-project dev",
     "dev:ai": "bun --filter @businesspro/ai dev",
     "dev:auth-ui": "bun --filter @businesspro/auth-ui dev",
+    "app:dev": "cd our-app ; bun run dev",
+    "api:dev": "cd api ; bun run start:dev",
     "build": "bun run --filter @businesspro/ai build && bun run --filter @businesspro/auth-ui build && bun run --filter api build && bun run --filter my-v0-project build",
     "build:ai": "bun run --filter @businesspro/ai build",
     "build:auth-ui": "bun run --filter @businesspro/auth-ui build",

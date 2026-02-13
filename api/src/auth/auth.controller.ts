@@ -3,6 +3,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
@@ -65,5 +68,45 @@ export class AuthController {
       businessType: user.businessType,
       createdAt: user.createdAt,
     };
+  }
+
+  @Public()
+  @Post('password/send-otp')
+  @ApiOperation({ 
+    summary: 'Send OTP for password change',
+    description: 'Sends a 6-digit OTP to the user\'s email for password verification. For development, use OTP: 123456',
+  })
+  @ApiResponse({ status: 200, description: 'OTP sent successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async sendPasswordChangeOtp(@Body() sendOtpDto: SendOtpDto) {
+    return this.authService.sendPasswordChangeOtp(sendOtpDto.email);
+  }
+
+  @Public()
+  @Post('password/verify-otp')
+  @ApiOperation({ 
+    summary: 'Verify OTP and get token',
+    description: 'Verifies the OTP and returns a temporary token for password change. Development OTP: 123456',
+  })
+  @ApiResponse({ status: 200, description: 'OTP verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
+  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
+    return this.authService.verifyOtp(verifyOtpDto.email, verifyOtpDto.otp);
+  }
+
+  @Public()
+  @Post('password/change')
+  @ApiOperation({ 
+    summary: 'Change password with OTP token',
+    description: 'Changes the user password using the OTP verification token',
+  })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired token' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+    return this.authService.changePasswordWithOtp(
+      changePasswordDto.otpToken,
+      changePasswordDto.newPassword,
+    );
   }
 }

@@ -16,7 +16,13 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { LoginDtoDTO, RegisterDtoDTO } from '.././schemas';
+import type {
+  ChangePasswordDtoDTO,
+  LoginDtoDTO,
+  RegisterDtoDTO,
+  SendOtpDtoDTO,
+  VerifyOtpDtoDTO,
+} from '.././schemas';
 
 import { customAxiosInstance } from '.././axios-instance';
 
@@ -346,3 +352,238 @@ export function useAuthControllerGetMe<
 
   return query;
 }
+
+/**
+ * Sends a 6-digit OTP to the user's email for password verification. For development, use OTP: 123456
+ * @summary Send OTP for password change
+ */
+export const authControllerSendPasswordChangeOtp = (
+  sendOtpDtoDTO: SendOtpDtoDTO,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/auth/password/send-otp`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: sendOtpDtoDTO,
+    signal,
+  });
+};
+
+export const getAuthControllerSendPasswordChangeOtpMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerSendPasswordChangeOtp>>,
+    TError,
+    { data: SendOtpDtoDTO },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authControllerSendPasswordChangeOtp>>,
+  TError,
+  { data: SendOtpDtoDTO },
+  TContext
+> => {
+  const mutationKey = ['authControllerSendPasswordChangeOtp'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authControllerSendPasswordChangeOtp>>,
+    { data: SendOtpDtoDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return authControllerSendPasswordChangeOtp(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AuthControllerSendPasswordChangeOtpMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerSendPasswordChangeOtp>>
+>;
+export type AuthControllerSendPasswordChangeOtpMutationBody = SendOtpDtoDTO;
+export type AuthControllerSendPasswordChangeOtpMutationError = void;
+
+/**
+ * @summary Send OTP for password change
+ */
+export const useAuthControllerSendPasswordChangeOtp = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerSendPasswordChangeOtp>>,
+    TError,
+    { data: SendOtpDtoDTO },
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof authControllerSendPasswordChangeOtp>>,
+  TError,
+  { data: SendOtpDtoDTO },
+  TContext
+> => {
+  const mutationOptions = getAuthControllerSendPasswordChangeOtpMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * Verifies the OTP and returns a temporary token for password change. Development OTP: 123456
+ * @summary Verify OTP and get token
+ */
+export const authControllerVerifyOtp = (verifyOtpDtoDTO: VerifyOtpDtoDTO, signal?: AbortSignal) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/auth/password/verify-otp`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: verifyOtpDtoDTO,
+    signal,
+  });
+};
+
+export const getAuthControllerVerifyOtpMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerVerifyOtp>>,
+    TError,
+    { data: VerifyOtpDtoDTO },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authControllerVerifyOtp>>,
+  TError,
+  { data: VerifyOtpDtoDTO },
+  TContext
+> => {
+  const mutationKey = ['authControllerVerifyOtp'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authControllerVerifyOtp>>,
+    { data: VerifyOtpDtoDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return authControllerVerifyOtp(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AuthControllerVerifyOtpMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerVerifyOtp>>
+>;
+export type AuthControllerVerifyOtpMutationBody = VerifyOtpDtoDTO;
+export type AuthControllerVerifyOtpMutationError = void;
+
+/**
+ * @summary Verify OTP and get token
+ */
+export const useAuthControllerVerifyOtp = <TError = void, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerVerifyOtp>>,
+    TError,
+    { data: VerifyOtpDtoDTO },
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof authControllerVerifyOtp>>,
+  TError,
+  { data: VerifyOtpDtoDTO },
+  TContext
+> => {
+  const mutationOptions = getAuthControllerVerifyOtpMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * Changes the user password using the OTP verification token
+ * @summary Change password with OTP token
+ */
+export const authControllerChangePassword = (
+  changePasswordDtoDTO: ChangePasswordDtoDTO,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/auth/password/change`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: changePasswordDtoDTO,
+    signal,
+  });
+};
+
+export const getAuthControllerChangePasswordMutationOptions = <
+  TError = void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerChangePassword>>,
+    TError,
+    { data: ChangePasswordDtoDTO },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authControllerChangePassword>>,
+  TError,
+  { data: ChangePasswordDtoDTO },
+  TContext
+> => {
+  const mutationKey = ['authControllerChangePassword'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authControllerChangePassword>>,
+    { data: ChangePasswordDtoDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return authControllerChangePassword(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AuthControllerChangePasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerChangePassword>>
+>;
+export type AuthControllerChangePasswordMutationBody = ChangePasswordDtoDTO;
+export type AuthControllerChangePasswordMutationError = void;
+
+/**
+ * @summary Change password with OTP token
+ */
+export const useAuthControllerChangePassword = <TError = void, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerChangePassword>>,
+    TError,
+    { data: ChangePasswordDtoDTO },
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof authControllerChangePassword>>,
+  TError,
+  { data: ChangePasswordDtoDTO },
+  TContext
+> => {
+  const mutationOptions = getAuthControllerChangePasswordMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};

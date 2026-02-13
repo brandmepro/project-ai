@@ -11,9 +11,36 @@ export class PlatformsService {
     private platformRepository: Repository<PlatformConnection>,
   ) {}
 
-  async getAllConnections(userId: string): Promise<PlatformConnection[]> {
-    return this.platformRepository.find({
+  async getAllConnections(userId: string): Promise<any[]> {
+    // Get all existing connections from DB
+    const existingConnections = await this.platformRepository.find({
       where: { userId },
+    });
+
+    // All available platforms
+    const allPlatforms = Object.values(Platform);
+
+    // Map to include all platforms with their connection status
+    return allPlatforms.map(platform => {
+      const connection = existingConnections.find(c => c.platform === platform);
+      
+      if (connection) {
+        return connection;
+      }
+      
+      // Return placeholder for non-connected platforms
+      return {
+        platform,
+        userId,
+        isConnected: false,
+        accessToken: null,
+        refreshToken: null,
+        tokenExpiresAt: null,
+        platformData: {},
+        connectedAt: null,
+        createdAt: null,
+        updatedAt: null,
+      };
     });
   }
 

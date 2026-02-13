@@ -36,11 +36,13 @@ export default function HomePage() {
         borderRadius: '50%',
         animation: 'spin 1s linear infinite'
       }} />
-      <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `
+      }} />
     </div>
   );
 }

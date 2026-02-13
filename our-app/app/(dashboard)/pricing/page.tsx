@@ -145,10 +145,10 @@ export default function PricingPage() {
           <Table>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Feature</Table.Th>
-                <Table.Th className="text-center">Free</Table.Th>
-                <Table.Th className="text-center">Starter</Table.Th>
-                <Table.Th className="text-center">
+                <Table.Th style={{ width: '40%' }}>Feature</Table.Th>
+                <Table.Th style={{ width: '20%', textAlign: 'center' }}>Free</Table.Th>
+                <Table.Th style={{ width: '20%', textAlign: 'center' }}>Starter</Table.Th>
+                <Table.Th style={{ width: '20%', textAlign: 'center' }}>
                   <Badge color="violet" variant="light">Pro</Badge>
                 </Table.Th>
               </Table.Tr>
@@ -156,18 +156,18 @@ export default function PricingPage() {
             <Table.Tbody>
               {comparisonFeatures.map((row, index) => (
                 <Table.Tr key={row.feature}>
-                  <Table.Td>
+                  <Table.Td style={{ verticalAlign: 'middle' }}>
                     <Text size="sm" className="text-foreground">
                       {row.feature}
                     </Text>
                   </Table.Td>
-                  <Table.Td className="text-center">
+                  <Table.Td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                     {renderValue(row.free)}
                   </Table.Td>
-                  <Table.Td className="text-center">
+                  <Table.Td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                     {renderValue(row.starter)}
                   </Table.Td>
-                  <Table.Td className="text-center">
+                  <Table.Td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                     {renderValue(row.pro)}
                   </Table.Td>
                 </Table.Tr>

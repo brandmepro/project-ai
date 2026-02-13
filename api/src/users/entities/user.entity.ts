@@ -89,6 +89,138 @@ export class User {
     aiSuggestions?: boolean;
   };
 
+  @Column({
+    type: 'jsonb',
+    default: {
+      aiPriority: 'balanced',
+      autoEnhance: true,
+      smartHashtags: true,
+      contentNotifications: true,
+      experimentalFeatures: false,
+      visualStyle: 'clean',
+      captionLength: 'medium',
+      emojiUsage: 'moderate',
+    },
+    name: 'ai_settings',
+  })
+  aiSettings: {
+    aiPriority?: string;
+    autoEnhance?: boolean;
+    smartHashtags?: boolean;
+    contentNotifications?: boolean;
+    experimentalFeatures?: boolean;
+    visualStyle?: string;
+    captionLength?: string;
+    emojiUsage?: string;
+  };
+
+  @Column({
+    type: 'jsonb',
+    default: {
+      autoScheduling: true,
+      optimizeTiming: true,
+      minBuffer: 2,
+      maxPostsPerDay: 3,
+      postingSchedule: {
+        monday: ['09:00', '14:00', '19:00'],
+        tuesday: ['09:00', '14:00', '19:00'],
+        wednesday: ['09:00', '14:00', '19:00'],
+        thursday: ['09:00', '14:00', '19:00'],
+        friday: ['09:00', '14:00', '19:00'],
+        saturday: ['11:00', '17:00'],
+        sunday: ['11:00', '17:00'],
+      },
+    },
+    name: 'scheduling_settings',
+  })
+  schedulingSettings: {
+    autoScheduling?: boolean;
+    optimizeTiming?: boolean;
+    minBuffer?: number;
+    maxPostsPerDay?: number;
+    postingSchedule?: Record<string, string[]>;
+  };
+
+  @Column({
+    type: 'jsonb',
+    default: {
+      weeklyReportDay: 'monday',
+      includeReach: true,
+      includeEngagement: true,
+      includeGrowth: true,
+      includeTopPosts: true,
+      trackClicks: true,
+      trackVisits: true,
+      trackDemographics: false,
+    },
+    name: 'analytics_settings',
+  })
+  analyticsSettings: {
+    weeklyReportDay?: string;
+    includeReach?: boolean;
+    includeEngagement?: boolean;
+    includeGrowth?: boolean;
+    includeTopPosts?: boolean;
+    trackClicks?: boolean;
+    trackVisits?: boolean;
+    trackDemographics?: boolean;
+  };
+
+  @Column({
+    type: 'jsonb',
+    default: {
+      storeDrafts: true,
+      cacheContent: true,
+      analyticsCollection: true,
+      profileVisibility: 'public',
+      shareAnalytics: 'team',
+    },
+    name: 'privacy_settings',
+  })
+  privacySettings: {
+    storeDrafts?: boolean;
+    cacheContent?: boolean;
+    analyticsCollection?: boolean;
+    profileVisibility?: string;
+    shareAnalytics?: string;
+  };
+
+  @Column({
+    type: 'jsonb',
+    default: {
+      debugMode: false,
+      apiLogs: false,
+      betaFeatures: false,
+      aiModelTesting: false,
+      imageQuality: 'high',
+      cacheDuration: 7,
+    },
+    name: 'advanced_settings',
+  })
+  advancedSettings: {
+    debugMode?: boolean;
+    apiLogs?: boolean;
+    betaFeatures?: boolean;
+    aiModelTesting?: boolean;
+    imageQuality?: string;
+    cacheDuration?: number;
+  };
+
+  @Column({
+    type: 'jsonb',
+    default: {
+      autoCrosspost: true,
+      platformOptimizations: true,
+      tagLocation: false,
+    },
+    name: 'platform_preferences',
+  })
+  platformPreferences: {
+    autoCrosspost?: boolean;
+    platformOptimizations?: boolean;
+    tagLocation?: boolean;
+  };
+
   @Column({ default: false, name: 'two_factor_enabled' })
   twoFactorEnabled: boolean;
 

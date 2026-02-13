@@ -123,5 +123,23 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Fix mobile scroll issues */
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+  
+  /* Ensure all containers allow scrolling on mobile */
+  html {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 100%;
+  }
+  
+  /* Fix for iOS Safari */
+  body, #__next {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
 }
