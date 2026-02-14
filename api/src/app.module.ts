@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { AppController } from './app.controller';
 
 // Config
@@ -61,6 +62,11 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
   ],
   controllers: [AppController],
   providers: [
+    // Global Exception Filter - Proper error responses
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
     // Global JWT Guard - All routes protected by default
     // Use @Public() decorator to make routes public
     {
