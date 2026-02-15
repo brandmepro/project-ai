@@ -440,4 +440,104 @@ export class UsersService {
     // Platform preferences are now handled via Platforms table, this is a no-op
     return user;
   }
+
+  // OAuth Methods
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { googleId },
+      relations: ['settings', 'notificationSettings'],
+    });
+  }
+
+  async createOAuthUser(
+    email: string,
+    name: string,
+    googleId: string,
+    picture?: string,
+  ): Promise<User> {
+    // Check if user with this email already exists
+    const existingUser = await this.findByEmail(email);
+    if (existingUser) {
+      // If user exists with email but no googleId, link the account
+      if (!existingUser.googleId) {
+        return this.linkGoogleAccount(existingUser.id, googleId, picture);
+      }
+      throw new ConflictException('User already exists with this email');
+    }
+
+    // Create new OAuth user
+    const user = this.usersRepository.create({
+      email,
+      name,
+      googleId,
+      avatarUrl: picture,
+      oauthProvider: 'google',
+      onboardingCompleted: false, // OAuth users need to complete onboarding
+      passwordHash: null, // No password for OAuth users
+      emailVerified: true, // Google has verified the email
+    });
+
+    const savedUser = await this.usersRepository.save(user);
+
+    // Create default settings
+    const settings = this.settingsRepository.create({
+      userId: savedUser.id,
+    });
+    await this.settingsRepository.save(settings);
+
+    // Create default notification settings
+    const notificationSettings = this.notificationSettingsRepository.create({
+      userId: savedUser.id,
+    });
+    await this.notificationSettingsRepository.save(notificationSettings);
+
+    // Return user with relations
+    return this.findById(savedUser.id);
+  }
+
+  async linkGoogleAccount(
+    userId: number,
+    googleId: string,
+    picture?: string,
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if this Google ID is already linked to another account
+    const existingGoogleUser = await this.findByGoogleId(googleId);
+    if (existingGoogleUser && existingGoogleUser.id !== userId) {
+      throw new ConflictException('This Google account is already linked to another user');
+    }
+
+    user.googleId = googleId;
+    if (picture && !user.avatarUrl) {
+      user.avatarUrl = picture;
+    }
+    user.emailVerified = true; // Google has verified the email
+    
+    return this.usersRepository.save(user);
+  }
+
+  async completeOnboarding(
+    userId: number,
+    businessName: string,
+    businessType: BusinessType,
+    goals: string[],
+  ): Promise<User> {
+    const user = await this.findById(userId);
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.businessName = businessName;
+    user.businessType = businessType;
+    user.contentGoals = goals;
+    user.onboardingCompleted = true;
+
+    return this.usersRepository.save(user);
+  }
 }

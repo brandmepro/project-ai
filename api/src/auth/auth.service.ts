@@ -276,4 +276,67 @@ export class AuthService {
       refreshToken,
     };
   }
+
+  /**
+   * Validate or create OAuth user
+   */
+  async validateOAuthUser(
+    email: string,
+    googleId: string,
+    name: string,
+    picture?: string,
+  ): Promise<User> {
+    // Check if user exists by Google ID
+    let user = await this.usersService.findByGoogleId(googleId);
+    
+    if (user) {
+      // User exists with this Google ID, update last login
+      await this.usersService.updateLastLogin(user.id);
+      return user;
+    }
+
+    // Check if user exists by email (for account linking)
+    user = await this.usersService.findByEmail(email);
+    
+    if (user) {
+      // Auto-link Google account to existing user
+      const linkedUser = await this.usersService.linkGoogleAccount(
+        user.id,
+        googleId,
+        picture,
+      );
+      await this.usersService.updateLastLogin(linkedUser.id);
+      return linkedUser;
+    }
+
+    // Create new OAuth user
+    const newUser = await this.usersService.createOAuthUser(
+      email,
+      name,
+      googleId,
+      picture,
+    );
+    await this.usersService.updateLastLogin(newUser.id);
+    return newUser;
+  }
+
+  /**
+   * Handle Google OAuth login
+   */
+  async googleLogin(user: User) {
+    const tokens = await this.generateTokens(user);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        businessType: user.businessType,
+        onboardingCompleted: user.onboardingCompleted,
+        avatarUrl: user.avatarUrl,
+      },
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
+  }
 }

@@ -15,6 +15,8 @@ export * from './analyticsControllerGetOverviewRange';
 export * from './analyticsControllerGetPlatformsParams';
 export * from './analyticsControllerGetPlatformsRange';
 export * from './changePasswordDtoDTO';
+export * from './completeOnboardingDtoDTO';
+export * from './completeOnboardingDtoDTOBusinessType';
 export * from './contentControllerFindAllParams';
 export * from './contentControllerFindAllPlatformsItem';
 export * from './contentControllerFindAllSortBy';

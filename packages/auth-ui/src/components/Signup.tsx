@@ -98,9 +98,17 @@ export function Signup({
   const handleNext = () => {
     const errors = form.validate();
     if (!errors.hasErrors) {
+      // Step 3 (Goals): Require at least 1 goal selection
       if (activeStep === 3 && selectedGoals.length === 0) {
-        // Optional: Allow skipping goals
+        return; // Don't proceed if no goals selected
       }
+      
+      // Step 3 (Goals): Call API to create account
+      if (activeStep === 3) {
+        handleSubmit(form.values);
+        return;
+      }
+      
       setActiveStep((current) => Math.min(current + 1, totalSteps - 1));
     }
   };
@@ -116,8 +124,11 @@ export function Signup({
         ...values,
         goals: selectedGoals,
       });
+      // On success, move to final step
+      setActiveStep(4);
     } catch (error) {
       console.error('Signup error:', error);
+      // Stay on current step if error
     } finally {
       setIsLoading(false);
     }
@@ -170,9 +181,9 @@ export function Signup({
       case 2:
         return 'We\'ll tailor content for your industry';
       case 3:
-        return 'Select all that apply (or skip)';
+        return 'Select all that apply (required)';
       case 4:
-        return 'Ready to create amazing content!';
+        return 'Account created successfully!';
       default:
         return '';
     }
@@ -451,6 +462,12 @@ export function Signup({
                     ))}
                   </Stack>
 
+                  {selectedGoals.length === 0 && (
+                    <Text size="xs" c="red" mt="xs">
+                      Please select at least one goal to continue
+                    </Text>
+                  )}
+
                   <Group grow mt="xl">
                     <Button
                       variant="light"
@@ -467,9 +484,11 @@ export function Signup({
                       size="lg"
                       gradient={{ from: 'violet', to: 'indigo', deg: 135 }}
                       variant="gradient"
-                      style={{ fontWeight: 600 }}
+                      style={{ fontWeight: 600, paddingLeft: '12px', paddingRight: '12px' }}
+                      disabled={selectedGoals.length === 0 || isLoading || loading}
+                      loading={isLoading || loading}
                     >
-                      {selectedGoals.length > 0 ? 'Continue' : 'Skip'}
+                      Create Account
                     </Button>
                   </Group>
                 </Stack>
@@ -529,16 +548,15 @@ export function Signup({
                   </Stack>
 
                   <Button
-                    type="submit"
                     fullWidth
                     size="lg"
                     radius="lg"
-                    loading={isLoading || loading}
+                    onClick={() => window.location.href = '/dashboard'}
                     gradient={{ from: 'violet', to: 'indigo', deg: 135 }}
                     variant="gradient"
                     style={{ fontWeight: 600, height: '56px', marginTop: '1rem' }}
                   >
-                    Start Creating Content
+                    Go to Dashboard
                   </Button>
                 </Stack>
               </motion.div>

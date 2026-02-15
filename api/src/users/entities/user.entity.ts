@@ -21,7 +21,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ name: 'password_hash' })
+  @Column({ name: 'password_hash', nullable: true })
   @Exclude()
   passwordHash: string;
 
@@ -50,6 +50,25 @@ export class User {
 
   @Column({ type: 'varchar', nullable: true })
   phone: string;
+
+  // OAuth fields
+  @Column({ type: 'varchar', nullable: true, name: 'google_id', unique: true })
+  googleId: string;
+
+  @Column({ 
+    type: 'varchar', 
+    default: 'local', 
+    name: 'oauth_provider',
+    comment: 'Authentication provider: local, google' 
+  })
+  oauthProvider: string;
+
+  @Column({ 
+    default: true, 
+    name: 'onboarding_completed',
+    comment: 'Tracks if OAuth users have completed business info collection'
+  })
+  onboardingCompleted: boolean;
 
   @Column({
     type: 'varchar',

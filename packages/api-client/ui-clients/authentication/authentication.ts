@@ -587,3 +587,126 @@ export const useAuthControllerChangePassword = <TError = void, TContext = unknow
 
   return useMutation(mutationOptions);
 };
+/**
+ * @summary Initiate Google OAuth flow
+ */
+export const authControllerGoogleAuth = (signal?: AbortSignal) => {
+  return customAxiosInstance<unknown>({ url: `/api/v1/auth/google`, method: 'GET', signal });
+};
+
+export const getAuthControllerGoogleAuthQueryKey = () => {
+  return [`/api/v1/auth/google`] as const;
+};
+
+export const getAuthControllerGoogleAuthQueryOptions = <
+  TData = Awaited<ReturnType<typeof authControllerGoogleAuth>>,
+  TError = void,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof authControllerGoogleAuth>>, TError, TData>;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAuthControllerGoogleAuthQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof authControllerGoogleAuth>>> = ({
+    signal,
+  }) => authControllerGoogleAuth(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authControllerGoogleAuth>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AuthControllerGoogleAuthQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerGoogleAuth>>
+>;
+export type AuthControllerGoogleAuthQueryError = void;
+
+/**
+ * @summary Initiate Google OAuth flow
+ */
+
+export function useAuthControllerGoogleAuth<
+  TData = Awaited<ReturnType<typeof authControllerGoogleAuth>>,
+  TError = void,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof authControllerGoogleAuth>>, TError, TData>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAuthControllerGoogleAuthQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Google OAuth callback
+ */
+export const authControllerGoogleAuthCallback = (signal?: AbortSignal) => {
+  return customAxiosInstance<unknown>({
+    url: `/api/v1/auth/google/callback`,
+    method: 'GET',
+    signal,
+  });
+};
+
+export const getAuthControllerGoogleAuthCallbackQueryKey = () => {
+  return [`/api/v1/auth/google/callback`] as const;
+};
+
+export const getAuthControllerGoogleAuthCallbackQueryOptions = <
+  TData = Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
+  TError = void,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
+    TError,
+    TData
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAuthControllerGoogleAuthCallbackQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>> = ({
+    signal,
+  }) => authControllerGoogleAuthCallback(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AuthControllerGoogleAuthCallbackQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>
+>;
+export type AuthControllerGoogleAuthCallbackQueryError = void;
+
+/**
+ * @summary Google OAuth callback
+ */
+
+export function useAuthControllerGoogleAuthCallback<
+  TData = Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
+  TError = void,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authControllerGoogleAuthCallback>>,
+    TError,
+    TData
+  >;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAuthControllerGoogleAuthCallbackQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}

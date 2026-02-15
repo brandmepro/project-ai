@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 @Module({
@@ -26,7 +27,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
       }),
     }),
   ],
-  providers: [AuthService, JwtStrategy, LocalStrategy],
+  providers: [AuthService, JwtStrategy, LocalStrategy, GoogleStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

@@ -18,6 +18,7 @@ import type {
 
 import type {
   ChangePasswordDtoDTO,
+  CompleteOnboardingDtoDTO,
   UpdateAdvancedSettingsDtoDTO,
   UpdateAiSettingsDtoDTO,
   UpdateAnalyticsSettingsDtoDTO,
@@ -150,6 +151,87 @@ export const useUsersControllerUpdateProfile = <TError = unknown, TContext = unk
   TContext
 > => {
   const mutationOptions = getUsersControllerUpdateProfileMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+/**
+ * OAuth users must provide business information after signup
+ * @summary Complete onboarding for OAuth users
+ */
+export const usersControllerCompleteOnboarding = (
+  completeOnboardingDtoDTO: CompleteOnboardingDtoDTO,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({
+    url: `/api/v1/users/onboarding/complete`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: completeOnboardingDtoDTO,
+    signal,
+  });
+};
+
+export const getUsersControllerCompleteOnboardingMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerCompleteOnboarding>>,
+    TError,
+    { data: CompleteOnboardingDtoDTO },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof usersControllerCompleteOnboarding>>,
+  TError,
+  { data: CompleteOnboardingDtoDTO },
+  TContext
+> => {
+  const mutationKey = ['usersControllerCompleteOnboarding'];
+  const { mutation: mutationOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof usersControllerCompleteOnboarding>>,
+    { data: CompleteOnboardingDtoDTO }
+  > = props => {
+    const { data } = props ?? {};
+
+    return usersControllerCompleteOnboarding(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UsersControllerCompleteOnboardingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof usersControllerCompleteOnboarding>>
+>;
+export type UsersControllerCompleteOnboardingMutationBody = CompleteOnboardingDtoDTO;
+export type UsersControllerCompleteOnboardingMutationError = unknown;
+
+/**
+ * @summary Complete onboarding for OAuth users
+ */
+export const useUsersControllerCompleteOnboarding = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof usersControllerCompleteOnboarding>>,
+    TError,
+    { data: CompleteOnboardingDtoDTO },
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof usersControllerCompleteOnboarding>>,
+  TError,
+  { data: CompleteOnboardingDtoDTO },
+  TContext
+> => {
+  const mutationOptions = getUsersControllerCompleteOnboardingMutationOptions(options);
 
   return useMutation(mutationOptions);
 };

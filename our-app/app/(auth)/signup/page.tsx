@@ -74,12 +74,18 @@ export default function SignupPage() {
   };
 
   const handleSocialSignup = async (provider: 'google' | 'facebook') => {
-    // TODO: Implement social signup
-    notifications.show({
-      title: 'Coming soon',
-      message: `Sign up with ${provider} will be available soon`,
-      color: 'blue',
-    });
+    if (provider === 'google') {
+      // Get API URL and construct OAuth endpoint
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+      window.location.href = `${apiUrl}/api/v1/auth/google`;
+    } else {
+      // Facebook not implemented yet
+      notifications.show({
+        title: 'Coming soon',
+        message: `Sign up with ${provider} will be available soon`,
+        color: 'blue',
+      });
+    }
   };
 
   return (

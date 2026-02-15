@@ -1,5 +1,7 @@
-import { Controller, Post, Body, UseGuards, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Req, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Request, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -8,6 +10,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -15,7 +18,10 @@ import { User } from '../users/entities/user.entity';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private configService: ConfigService,
+  ) {}
 
   @Public()
   @Post('register')
@@ -108,5 +114,46 @@ export class AuthController {
       changePasswordDto.otpToken,
       changePasswordDto.newPassword,
     );
+  }
+
+  @Public()
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  @ApiOperation({ summary: 'Initiate Google OAuth flow' })
+  @ApiResponse({ status: 302, description: 'Redirects to Google consent screen' })
+  async googleAuth(@Req() req: Request) {
+    // This route initiates the Google OAuth flow
+    // The GoogleAuthGuard handles the redirect to Google's consent screen
+    // This method won't actually execute as the guard redirects first
+    // but we need it for proper route registration
+  }
+
+  @Public()
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  @ApiResponse({ status: 302, description: 'Redirects to frontend with tokens' })
+  async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
+    // User profile is attached by GoogleStrategy
+    const googleUser = req.user as any;
+
+    // Validate or create user
+    const user = await this.authService.validateOAuthUser(
+      googleUser.email,
+      googleUser.googleId,
+      googleUser.name,
+      googleUser.picture,
+    );
+
+    // Generate JWT tokens
+    const tokens = await this.authService.googleLogin(user);
+
+    // Get frontend URL from config
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+
+    // Redirect to frontend with tokens
+    const redirectUrl = `${frontendUrl}/oauth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}&onboardingCompleted=${user.onboardingCompleted}`;
+    
+    return res.redirect(redirectUrl);
   }
 }

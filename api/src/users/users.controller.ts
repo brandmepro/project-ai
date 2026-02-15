@@ -28,6 +28,7 @@ import { UpdateAnalyticsSettingsDto } from './dto/update-analytics-settings.dto'
 import { UpdatePrivacySettingsDto } from './dto/update-privacy-settings.dto';
 import { UpdateAdvancedSettingsDto } from './dto/update-advanced-settings.dto';
 import { UpdatePlatformPreferencesDto } from '../platforms/dto/update-platform-preferences.dto';
+import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -48,7 +49,39 @@ export class UsersController {
       businessType: user.businessType,
       businessDescription: user.businessDescription,
       emailVerified: user.emailVerified,
+      onboardingCompleted: user.onboardingCompleted,
+      oauthProvider: user.oauthProvider,
+      avatarUrl: user.avatarUrl,
       createdAt: user.createdAt,
+    };
+  }
+
+  @Post('onboarding/complete')
+  @ApiOperation({ 
+    summary: 'Complete onboarding for OAuth users',
+    description: 'OAuth users must provide business information after signup'
+  })
+  @ApiResponse({ status: 200, description: 'Onboarding completed successfully' })
+  async completeOnboarding(
+    @CurrentUser('id') userId: number,
+    @Body() completeOnboardingDto: CompleteOnboardingDto,
+  ) {
+    const user = await this.usersService.completeOnboarding(
+      userId,
+      completeOnboardingDto.businessName,
+      completeOnboardingDto.businessType,
+      completeOnboardingDto.goals,
+    );
+
+    return {
+      message: 'Onboarding completed successfully',
+      user: {
+        id: user.id,
+        businessName: user.businessName,
+        businessType: user.businessType,
+        contentGoals: user.contentGoals,
+        onboardingCompleted: user.onboardingCompleted,
+      },
     };
   }
 
