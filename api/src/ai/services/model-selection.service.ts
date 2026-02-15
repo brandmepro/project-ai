@@ -159,9 +159,45 @@ export class ModelSelectionService {
   }
 
   /**
-   * Get model by ID
+   * Get all AI models with optional filters
    */
-  async getModelById(modelId: string): Promise<AIModel | null> {
+  async getAllModels(filters?: {
+    activeOnly?: boolean;
+    provider?: string;
+    type?: string;
+  }): Promise<AIModel[]> {
+    const where: any = {};
+    
+    if (filters?.activeOnly) {
+      where.isActive = true;
+    }
+    
+    if (filters?.provider) {
+      where.provider = filters.provider;
+    }
+    
+    return this.aiModelRepository.find({
+      where,
+      order: {
+        priorityRank: 'DESC',
+        modelName: 'ASC',
+      },
+    });
+  }
+
+  /**
+   * Get model by internal database ID
+   */
+  async getModelById(id: number): Promise<AIModel | null> {
+    return this.aiModelRepository.findOne({
+      where: { id, isActive: true },
+    });
+  }
+
+  /**
+   * Get model by external model ID (e.g., "anthropic/claude-sonnet-4")
+   */
+  async getModelByModelId(modelId: string): Promise<AIModel | null> {
     return this.aiModelRepository.findOne({
       where: { modelId, isActive: true },
     });
@@ -285,7 +321,7 @@ export class ModelSelectionService {
    * Get cost estimate for a task
    */
   async estimateCost(
-    modelId: string,
+    modelId: number,
     inputTokens: number,
     outputTokens: number,
   ): Promise<{ inputCost: number; outputCost: number; totalCost: number }> {

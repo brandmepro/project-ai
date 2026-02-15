@@ -22,8 +22,8 @@ export class FeedbackService {
    */
   async recordFeedback(
     userId: number,
-    aiLogId: string,
-    modelId: string,
+    aiLogId: number,
+    modelId: number,
     category: AITaskCategory,
     feedbackType: FeedbackType,
     qualityRating?: number,
@@ -31,7 +31,7 @@ export class FeedbackService {
   ): Promise<void> {
     // Get model internal ID
     const model = await this.modelRepository.findOne({
-      where: { modelId },
+      where: { id: modelId },
     });
 
     if (!model) {
@@ -64,7 +64,7 @@ export class FeedbackService {
    */
   private async updateUserPreference(
     userId: number,
-    modelId: string,
+    modelId: number,
     category: AITaskCategory,
     feedbackType: FeedbackType,
     qualityRating?: number,
@@ -182,7 +182,7 @@ export class FeedbackService {
    * Get feedback stats for a model + category
    */
   async getModelStats(
-    modelId: string,
+    modelId: number,
     category: AITaskCategory,
   ): Promise<{
     totalFeedback: number;
@@ -193,7 +193,7 @@ export class FeedbackService {
     likeRatio: number;
   }> {
     const model = await this.modelRepository.findOne({
-      where: { modelId },
+      where: { id: modelId },
     });
 
     if (!model) {

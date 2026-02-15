@@ -81,7 +81,7 @@ export interface AITaskRequest {
 }
 
 export interface ModelSelectionResult {
-  modelId: string;
+  modelId: number;
   modelName: string;
   provider: AIProvider;
   reason: string;
@@ -93,14 +93,14 @@ export interface ModelSelectionResult {
 
 export interface UserFeedback {
   feedbackType: FeedbackType;
-  modelId: string;
+  modelId: number;
   taskCategory: AITaskCategory;
   quality?: number;
   reason?: string;
 }
 
 export interface ModelPerformanceMetrics {
-  modelId: string;
+  modelId: number;
   taskCategory: AITaskCategory;
   totalRequests: number;
   successRate: number;

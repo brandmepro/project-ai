@@ -8,8 +8,8 @@ import {
 
 @Entity('ai_models')
 export class AIModel {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
   @Column({ unique: true, name: 'model_id' })
   modelId: string;

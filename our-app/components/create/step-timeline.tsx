@@ -15,13 +15,33 @@ import {
 import { DatePickerInput, TimeInput } from '@mantine/dates'
 import { 
   IconBuilding, 
-  IconBrandInstagram, 
+  IconBrandInstagram,
+  IconBrandFacebook,
+  IconBrandWhatsapp,
+  IconMapPin,
   IconTarget, 
   IconMoodSmile,
   IconLanguage,
   IconPalette,
   IconCalendar,
   IconCheck,
+  IconCoffee,
+  IconShoppingBag,
+  IconScissors,
+  IconBarbell,
+  IconStethoscope,
+  IconToolsKitchen2,
+  IconShirt,
+  IconCup,
+  IconSparkles,
+  IconUsers,
+  IconTrendingUp,
+  IconGift,
+  IconPercentage,
+  IconBriefcase,
+  IconMicrophone2,
+  IconPaint,
+  IconStar,
 } from '@tabler/icons-react'
 import { useAppStore, type BusinessType, type Platform, type ContentGoal, type Tone, type Language, type VisualStyle } from '@/lib/store'
 
@@ -70,50 +90,50 @@ const steps = [
   },
 ]
 
-const businessTypes: { value: BusinessType; label: string }[] = [
-  { value: 'cafe', label: 'Cafe / Coffee Shop' },
-  { value: 'kirana', label: 'Kirana / General Store' },
-  { value: 'salon', label: 'Salon / Beauty Parlor' },
-  { value: 'gym', label: 'Gym / Fitness Center' },
-  { value: 'clinic', label: 'Clinic / Healthcare' },
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'boutique', label: 'Boutique / Fashion' },
-  { value: 'tea-shop', label: 'Tea Shop / Chai Stall' },
+const businessTypes: { value: BusinessType; label: string; icon: any; color: string; category: string }[] = [
+  { value: 'cafe', label: 'Cafe', icon: IconCoffee, color: 'brown', category: 'Food & Beverage' },
+  { value: 'kirana', label: 'Kirana Store', icon: IconShoppingBag, color: 'orange', category: 'Retail' },
+  { value: 'salon', label: 'Beauty Salon', icon: IconScissors, color: 'pink', category: 'Beauty & Wellness' },
+  { value: 'gym', label: 'Fitness Center', icon: IconBarbell, color: 'red', category: 'Fitness' },
+  { value: 'clinic', label: 'Healthcare', icon: IconStethoscope, color: 'blue', category: 'Healthcare' },
+  { value: 'restaurant', label: 'Restaurant', icon: IconToolsKitchen2, color: 'orange', category: 'Food & Beverage' },
+  { value: 'boutique', label: 'Fashion Boutique', icon: IconShirt, color: 'violet', category: 'Fashion' },
+  { value: 'tea-shop', label: 'Tea Shop', icon: IconCup, color: 'teal', category: 'Food & Beverage' },
 ]
 
-const platforms: { value: Platform; label: string }[] = [
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'facebook', label: 'Facebook' },
-  { value: 'whatsapp', label: 'WhatsApp Status' },
-  { value: 'google-business', label: 'Google Business' },
+const platforms: { value: Platform; label: string; icon: any; color: string }[] = [
+  { value: 'instagram', label: 'Instagram', icon: IconBrandInstagram, color: 'pink' },
+  { value: 'facebook', label: 'Facebook', icon: IconBrandFacebook, color: 'blue' },
+  { value: 'whatsapp', label: 'WhatsApp Status', icon: IconBrandWhatsapp, color: 'green' },
+  { value: 'google-business', label: 'Google Business', icon: IconMapPin, color: 'red' },
 ]
 
-const contentGoals: { value: ContentGoal; label: string }[] = [
-  { value: 'promotion', label: 'Promotion' },
-  { value: 'awareness', label: 'Awareness' },
-  { value: 'engagement', label: 'Engagement' },
-  { value: 'festival', label: 'Festival' },
-  { value: 'offer', label: 'Offer / Sale' },
+const contentGoals: { value: ContentGoal; label: string; icon: any; color: string }[] = [
+  { value: 'promotion', label: 'Promotion', icon: IconSparkles, color: 'violet' },
+  { value: 'awareness', label: 'Awareness', icon: IconUsers, color: 'blue' },
+  { value: 'engagement', label: 'Engagement', icon: IconTrendingUp, color: 'green' },
+  { value: 'festival', label: 'Festival', icon: IconGift, color: 'orange' },
+  { value: 'offer', label: 'Offer / Sale', icon: IconPercentage, color: 'red' },
 ]
 
-const tones: { value: Tone; label: string }[] = [
-  { value: 'friendly', label: 'Friendly' },
-  { value: 'professional', label: 'Professional' },
-  { value: 'fun', label: 'Fun' },
-  { value: 'minimal', label: 'Minimal' },
+const tones: { value: Tone; label: string; icon: any; color: string }[] = [
+  { value: 'friendly', label: 'Friendly', icon: IconMoodSmile, color: 'green' },
+  { value: 'professional', label: 'Professional', icon: IconBriefcase, color: 'blue' },
+  { value: 'fun', label: 'Fun', icon: IconMicrophone2, color: 'orange' },
+  { value: 'minimal', label: 'Minimal', icon: IconPaint, color: 'gray' },
 ]
 
-const languages: { value: Language; label: string }[] = [
-  { value: 'english', label: 'English' },
-  { value: 'hinglish', label: 'Hinglish' },
-  { value: 'hindi', label: 'Hindi' },
+const languages: { value: Language; label: string; icon: any; color: string }[] = [
+  { value: 'english', label: 'English', icon: IconLanguage, color: 'blue' },
+  { value: 'hinglish', label: 'Hinglish', icon: IconLanguage, color: 'orange' },
+  { value: 'hindi', label: 'Hindi', icon: IconLanguage, color: 'green' },
 ]
 
-const visualStyles: { value: VisualStyle; label: string }[] = [
-  { value: 'clean', label: 'Clean' },
-  { value: 'festive', label: 'Festive' },
-  { value: 'modern', label: 'Modern' },
-  { value: 'bold', label: 'Bold' },
+const visualStyles: { value: VisualStyle; label: string; icon: any; color: string }[] = [
+  { value: 'clean', label: 'Clean', icon: IconPaint, color: 'blue' },
+  { value: 'festive', label: 'Festive', icon: IconGift, color: 'orange' },
+  { value: 'modern', label: 'Modern', icon: IconStar, color: 'violet' },
+  { value: 'bold', label: 'Bold', icon: IconSparkles, color: 'red' },
 ]
 
 interface StepTimelineProps {
@@ -139,12 +159,12 @@ export function StepTimeline({ className, mobileMode = false }: StepTimelineProp
 
   const getStepSummary = (stepId: number) => {
     switch (stepId) {
-      case 0: return businessTypes.find(b => b.value === createFlow.businessType)?.label
-      case 1: return createFlow.platforms.map(p => platforms.find(pl => pl.value === p)?.label).join(', ')
-      case 2: return contentGoals.find(g => g.value === createFlow.contentGoal)?.label
-      case 3: return tones.find(t => t.value === createFlow.tone)?.label
-      case 4: return languages.find(l => l.value === createFlow.language)?.label
-      case 5: return visualStyles.find(v => v.value === createFlow.visualStyle)?.label
+      case 0: return businessTypes.find(b => b.value === createFlow.businessType)
+      case 1: return createFlow.platforms.length
+      case 2: return contentGoals.find(g => g.value === createFlow.contentGoal)
+      case 3: return tones.find(t => t.value === createFlow.tone)
+      case 4: return languages.find(l => l.value === createFlow.language)
+      case 5: return visualStyles.find(v => v.value === createFlow.visualStyle)
       case 6: return createFlow.scheduledDate ? new Date(createFlow.scheduledDate).toLocaleDateString() : null
       default: return null
     }
@@ -156,88 +176,212 @@ export function StepTimeline({ className, mobileMode = false }: StepTimelineProp
         return (
           <Select
             placeholder="Select business type"
-            data={businessTypes}
+            data={businessTypes.map(b => ({
+              value: b.value,
+              label: b.label,
+            }))}
             value={createFlow.businessType}
             onChange={(value) => updateCreateFlow({ businessType: value as BusinessType })}
-            size="sm"
+            size="md"
             searchable
+            leftSection={
+              createFlow.businessType ? (
+                (() => {
+                  const selected = businessTypes.find(b => b.value === createFlow.businessType)
+                  if (selected) {
+                    const Icon = selected.icon
+                    return <Icon size={16} className="text-muted-foreground" />
+                  }
+                  return null
+                })()
+              ) : (
+                <IconBuilding size={16} className="text-muted-foreground" />
+              )
+            }
+            rightSection={
+              createFlow.businessType ? (
+                (() => {
+                  const selected = businessTypes.find(b => b.value === createFlow.businessType)
+                  if (selected) {
+                    return (
+                      <Badge size="sm" color={selected.color} variant="light">
+                        {selected.category}
+                      </Badge>
+                    )
+                  }
+                  return null
+                })()
+              ) : null
+            }
+            classNames={{
+              input: 'border-border bg-secondary/30 hover:bg-secondary/50 transition-colors',
+              option: 'hover:bg-secondary/80',
+            }}
+            styles={{
+              input: {
+                borderRadius: '8px',
+              },
+            }}
+            renderOption={({ option }) => {
+              const business = businessTypes.find(b => b.value === option.value)
+              if (!business) return option.label
+              const Icon = business.icon
+              return (
+                <Group wrap="nowrap" gap="sm" className="py-1">
+                  <Box className={`p-2 rounded-lg bg-${business.color}-50 dark:bg-${business.color}-950`}>
+                    <Icon size={18} className={`text-${business.color}-600 dark:text-${business.color}-400`} />
+                  </Box>
+                  <Box className="flex-1">
+                    <Text size="sm" fw={500}>{business.label}</Text>
+                    <Text size="xs" c="dimmed">{business.category}</Text>
+                  </Box>
+                  <Badge size="xs" color={business.color} variant="light">
+                    {business.category.split(' ')[0]}
+                  </Badge>
+                </Group>
+              )
+            }}
           />
         )
       case 1:
         return (
-          <Chip.Group
-            multiple
-            value={createFlow.platforms}
-            onChange={(value) => updateCreateFlow({ platforms: value as Platform[] })}
-          >
-            <Group gap="xs">
-              {platforms.map((platform) => (
-                <Chip key={platform.value} value={platform.value} variant="light" color="violet">
-                  {platform.label}
-                </Chip>
-              ))}
-            </Group>
-          </Chip.Group>
+          <Group gap="xs">
+            {platforms.map((platform) => {
+              const Icon = platform.icon
+              const isSelected = createFlow.platforms.includes(platform.value)
+              return (
+                <Box
+                  key={platform.value}
+                  onClick={() => {
+                    const newPlatforms = isSelected
+                      ? createFlow.platforms.filter(p => p !== platform.value)
+                      : [...createFlow.platforms, platform.value]
+                    updateCreateFlow({ platforms: newPlatforms as Platform[] })
+                  }}
+                  className={`
+                    flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all
+                    ${isSelected 
+                      ? `bg-${platform.color}-100 dark:bg-${platform.color}-950 border-2 border-${platform.color}-500` 
+                      : 'bg-secondary/50 border-2 border-transparent hover:border-border'
+                    }
+                  `}
+                >
+                  <Icon size={18} className={isSelected ? `text-${platform.color}-600 dark:text-${platform.color}-400` : 'text-muted-foreground'} />
+                  <Text size="sm" fw={500} className={isSelected ? 'text-foreground' : 'text-muted-foreground'}>
+                    {platform.label}
+                  </Text>
+                </Box>
+              )
+            })}
+          </Group>
         )
       case 2:
         return (
-          <Chip.Group
-            value={createFlow.contentGoal || ''}
-            onChange={(value) => updateCreateFlow({ contentGoal: value as ContentGoal })}
-          >
-            <Group gap="xs">
-              {contentGoals.map((goal) => (
-                <Chip key={goal.value} value={goal.value} variant="light" color="violet">
-                  {goal.label}
-                </Chip>
-              ))}
-            </Group>
-          </Chip.Group>
+          <Group gap="xs">
+            {contentGoals.map((goal) => {
+              const Icon = goal.icon
+              const isSelected = createFlow.contentGoal === goal.value
+              return (
+                <Box
+                  key={goal.value}
+                  onClick={() => updateCreateFlow({ contentGoal: goal.value as ContentGoal })}
+                  className={`
+                    flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all
+                    ${isSelected 
+                      ? `bg-${goal.color}-100 dark:bg-${goal.color}-950 border-2 border-${goal.color}-500` 
+                      : 'bg-secondary/50 border-2 border-transparent hover:border-border'
+                    }
+                  `}
+                >
+                  <Icon size={18} className={isSelected ? `text-${goal.color}-600 dark:text-${goal.color}-400` : 'text-muted-foreground'} />
+                  <Text size="sm" fw={500} className={isSelected ? 'text-foreground' : 'text-muted-foreground'}>
+                    {goal.label}
+                  </Text>
+                </Box>
+              )
+            })}
+          </Group>
         )
       case 3:
         return (
-          <Chip.Group
-            value={createFlow.tone || ''}
-            onChange={(value) => updateCreateFlow({ tone: value as Tone })}
-          >
-            <Group gap="xs">
-              {tones.map((tone) => (
-                <Chip key={tone.value} value={tone.value} variant="light" color="violet">
-                  {tone.label}
-                </Chip>
-              ))}
-            </Group>
-          </Chip.Group>
+          <Group gap="xs">
+            {tones.map((tone) => {
+              const Icon = tone.icon
+              const isSelected = createFlow.tone === tone.value
+              return (
+                <Box
+                  key={tone.value}
+                  onClick={() => updateCreateFlow({ tone: tone.value as Tone })}
+                  className={`
+                    flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all
+                    ${isSelected 
+                      ? `bg-${tone.color}-100 dark:bg-${tone.color}-950 border-2 border-${tone.color}-500` 
+                      : 'bg-secondary/50 border-2 border-transparent hover:border-border'
+                    }
+                  `}
+                >
+                  <Icon size={18} className={isSelected ? `text-${tone.color}-600 dark:text-${tone.color}-400` : 'text-muted-foreground'} />
+                  <Text size="sm" fw={500} className={isSelected ? 'text-foreground' : 'text-muted-foreground'}>
+                    {tone.label}
+                  </Text>
+                </Box>
+              )
+            })}
+          </Group>
         )
       case 4:
         return (
-          <Chip.Group
-            value={createFlow.language || ''}
-            onChange={(value) => updateCreateFlow({ language: value as Language })}
-          >
-            <Group gap="xs">
-              {languages.map((lang) => (
-                <Chip key={lang.value} value={lang.value} variant="light" color="violet">
-                  {lang.label}
-                </Chip>
-              ))}
-            </Group>
-          </Chip.Group>
+          <Group gap="xs">
+            {languages.map((lang) => {
+              const Icon = lang.icon
+              const isSelected = createFlow.language === lang.value
+              return (
+                <Box
+                  key={lang.value}
+                  onClick={() => updateCreateFlow({ language: lang.value as Language })}
+                  className={`
+                    flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all
+                    ${isSelected 
+                      ? `bg-${lang.color}-100 dark:bg-${lang.color}-950 border-2 border-${lang.color}-500` 
+                      : 'bg-secondary/50 border-2 border-transparent hover:border-border'
+                    }
+                  `}
+                >
+                  <Icon size={18} className={isSelected ? `text-${lang.color}-600 dark:text-${lang.color}-400` : 'text-muted-foreground'} />
+                  <Text size="sm" fw={500} className={isSelected ? 'text-foreground' : 'text-muted-foreground'}>
+                    {lang.label}
+                  </Text>
+                </Box>
+              )
+            })}
+          </Group>
         )
       case 5:
         return (
-          <Chip.Group
-            value={createFlow.visualStyle || ''}
-            onChange={(value) => updateCreateFlow({ visualStyle: value as VisualStyle })}
-          >
-            <Group gap="xs">
-              {visualStyles.map((style) => (
-                <Chip key={style.value} value={style.value} variant="light" color="violet">
-                  {style.label}
-                </Chip>
-              ))}
-            </Group>
-          </Chip.Group>
+          <Group gap="xs">
+            {visualStyles.map((style) => {
+              const Icon = style.icon
+              const isSelected = createFlow.visualStyle === style.value
+              return (
+                <Box
+                  key={style.value}
+                  onClick={() => updateCreateFlow({ visualStyle: style.value as VisualStyle })}
+                  className={`
+                    flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all
+                    ${isSelected 
+                      ? `bg-${style.color}-100 dark:bg-${style.color}-950 border-2 border-${style.color}-500` 
+                      : 'bg-secondary/50 border-2 border-transparent hover:border-border'
+                    }
+                  `}
+                >
+                  <Icon size={18} className={isSelected ? `text-${style.color}-600 dark:text-${style.color}-400` : 'text-muted-foreground'} />
+                  <Text size="sm" fw={500} className={isSelected ? 'text-foreground' : 'text-muted-foreground'}>
+                    {style.label}
+                  </Text>
+                </Box>
+              )
+            })}
+          </Group>
         )
       case 6:
         return (
@@ -396,9 +540,44 @@ export function StepTimeline({ className, mobileMode = false }: StepTimelineProp
                         {step.title}
                       </Text>
                       {isCompleted && !isActive && summary && (
-                        <Badge size="xs" variant="light" color="violet">
-                          {summary.length > 15 ? `${summary.substring(0, 15)}...` : summary}
-                        </Badge>
+                        (() => {
+                          if (step.id === 0 && typeof summary === 'object' && 'label' in summary) {
+                            const business = summary as typeof businessTypes[number]
+                            const BIcon = business.icon
+                            return (
+                              <Group gap="xs">
+                                <BIcon size={14} className="text-muted-foreground" />
+                                <Badge size="xs" variant="light" color={business.color}>
+                                  {business.label}
+                                </Badge>
+                              </Group>
+                            )
+                          }
+                          if (step.id === 1 && typeof summary === 'number') {
+                            return (
+                              <Badge size="xs" variant="light" color="violet">
+                                {summary} platform{summary > 1 ? 's' : ''}
+                              </Badge>
+                            )
+                          }
+                          if (typeof summary === 'object' && 'label' in summary) {
+                            const item = summary as { label: string; icon: any; color: string }
+                            const ItemIcon = item.icon
+                            return (
+                              <Group gap="xs">
+                                <ItemIcon size={14} className="text-muted-foreground" />
+                                <Badge size="xs" variant="light" color={item.color}>
+                                  {item.label}
+                                </Badge>
+                              </Group>
+                            )
+                          }
+                          return (
+                            <Badge size="xs" variant="light" color="violet">
+                              {String(summary).length > 15 ? `${String(summary).substring(0, 15)}...` : String(summary)}
+                            </Badge>
+                          )
+                        })()
                       )}
                     </Group>
                     {isActive && (

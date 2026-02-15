@@ -54,6 +54,21 @@ export class AIController {
     return this.modelSelectionService.getModelsByCapability(capability);
   }
 
+  @Get('models')
+  @ApiOperation({ summary: 'Get all available AI models' })
+  @ApiResponse({ status: 200, description: 'All models returned' })
+  async getAllModels(
+    @Query('active') active?: string,
+    @Query('provider') provider?: string,
+    @Query('type') type?: string,
+  ) {
+    return this.modelSelectionService.getAllModels({
+      activeOnly: active === 'true',
+      provider,
+      type,
+    });
+  }
+
   @Post('feedback')
   @ApiOperation({ summary: 'Submit feedback on AI output' })
   @ApiResponse({ status: 200, description: 'Feedback recorded' })
@@ -88,7 +103,7 @@ export class AIController {
   @ApiOperation({ summary: 'Get model statistics' })
   @ApiResponse({ status: 200, description: 'Stats returned' })
   async getModelStats(
-    @Param('modelId') modelId: string,
+    @Param('modelId') modelId: number,
     @Param('category') category: AITaskCategory,
   ) {
     return this.feedbackService.getModelStats(modelId, category);

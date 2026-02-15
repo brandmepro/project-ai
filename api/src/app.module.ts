@@ -23,6 +23,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PlatformsModule } from './platforms/platforms.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
     DashboardModule,
     PlatformsModule,
     SubscriptionsModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [

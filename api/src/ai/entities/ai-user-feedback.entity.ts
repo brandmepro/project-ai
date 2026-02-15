@@ -12,25 +12,25 @@ import { AIModel } from './ai-model.entity';
 
 @Entity('ai_user_feedback')
 export class AIUserFeedback {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
-  @Column({ type: 'uuid', nullable: true, name: 'user_id' })
+  @Column({ type: 'integer', nullable: true, name: 'user_id' })
   userId: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'uuid', nullable: true, name: 'ai_log_id' })
-  aiLogId: string;
+  @Column({ type: 'integer', nullable: true, name: 'ai_log_id' })
+  aiLogId: number;
 
   @ManyToOne(() => AILog)
   @JoinColumn({ name: 'ai_log_id' })
   aiLog: AILog;
 
-  @Column({ type: 'uuid', nullable: true, name: 'model_id' })
-  modelId: string;
+  @Column({ type: 'integer', nullable: true, name: 'model_id' })
+  modelId: number;
 
   @ManyToOne(() => AIModel)
   @JoinColumn({ name: 'model_id' })

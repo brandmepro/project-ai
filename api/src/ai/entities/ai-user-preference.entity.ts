@@ -14,18 +14,18 @@ import { AIModel } from './ai-model.entity';
 @Entity('ai_user_preferences')
 @Unique(['userId', 'modelId', 'categoryKey'])
 export class AIUserPreference {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
-  @Column({ type: 'uuid', name: 'user_id' })
+  @Column({ type: 'integer', name: 'user_id' })
   userId: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'uuid', name: 'model_id' })
-  modelId: string;
+  @Column({ type: 'integer', name: 'model_id' })
+  modelId: number;
 
   @ManyToOne(() => AIModel)
   @JoinColumn({ name: 'model_id' })

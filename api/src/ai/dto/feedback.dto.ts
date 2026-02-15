@@ -1,12 +1,12 @@
-import { IsEnum, IsString, IsOptional, IsNumber, Min, Max, IsUUID } from 'class-validator';
+import { IsEnum, IsString, IsOptional, IsNumber, Min, Max, IsInt } from 'class-validator';
 import { FeedbackType, AITaskCategory } from '../types/ai-types';
 
 export class FeedbackDto {
-  @IsUUID()
-  aiLogId: string;
+  @IsInt()
+  aiLogId: number;
 
-  @IsString()
-  modelId: string;
+  @IsInt()
+  modelId: number;
 
   @IsEnum(AITaskCategory)
   category: AITaskCategory;

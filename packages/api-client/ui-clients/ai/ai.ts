@@ -17,6 +17,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AIControllerGetAllModelsParams,
   AIControllerGetAnalyticsParams,
   AIControllerGetSuggestionsParams,
   FeedbackDtoDTO,
@@ -248,6 +249,71 @@ export function useAIControllerGetModelsByCapability<
 }
 
 /**
+ * @summary Get all available AI models
+ */
+export const aIControllerGetAllModels = (
+  params: AIControllerGetAllModelsParams,
+  signal?: AbortSignal,
+) => {
+  return customAxiosInstance<void>({ url: `/api/v1/ai/models`, method: 'GET', params, signal });
+};
+
+export const getAIControllerGetAllModelsQueryKey = (params?: AIControllerGetAllModelsParams) => {
+  return [`/api/v1/ai/models`, ...(params ? [params] : [])] as const;
+};
+
+export const getAIControllerGetAllModelsQueryOptions = <
+  TData = Awaited<ReturnType<typeof aIControllerGetAllModels>>,
+  TError = unknown,
+>(
+  params: AIControllerGetAllModelsParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof aIControllerGetAllModels>>, TError, TData>;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAIControllerGetAllModelsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof aIControllerGetAllModels>>> = ({
+    signal,
+  }) => aIControllerGetAllModels(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof aIControllerGetAllModels>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AIControllerGetAllModelsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof aIControllerGetAllModels>>
+>;
+export type AIControllerGetAllModelsQueryError = unknown;
+
+/**
+ * @summary Get all available AI models
+ */
+
+export function useAIControllerGetAllModels<
+  TData = Awaited<ReturnType<typeof aIControllerGetAllModels>>,
+  TError = unknown,
+>(
+  params: AIControllerGetAllModelsParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof aIControllerGetAllModels>>, TError, TData>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAIControllerGetAllModelsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
  * @summary Submit feedback on AI output
  */
 export const aIControllerRecordFeedback = (
@@ -402,7 +468,7 @@ export function useAIControllerGetUserPreferences<
  * @summary Get model statistics
  */
 export const aIControllerGetModelStats = (
-  modelId: string,
+  modelId: number,
   category: string,
   signal?: AbortSignal,
 ) => {
@@ -413,7 +479,7 @@ export const aIControllerGetModelStats = (
   });
 };
 
-export const getAIControllerGetModelStatsQueryKey = (modelId?: string, category?: string) => {
+export const getAIControllerGetModelStatsQueryKey = (modelId?: number, category?: string) => {
   return [`/api/v1/ai/stats/${modelId}/${category}`] as const;
 };
 
@@ -421,7 +487,7 @@ export const getAIControllerGetModelStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof aIControllerGetModelStats>>,
   TError = unknown,
 >(
-  modelId: string,
+  modelId: number,
   category: string,
   options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof aIControllerGetModelStats>>, TError, TData>;
@@ -459,7 +525,7 @@ export function useAIControllerGetModelStats<
   TData = Awaited<ReturnType<typeof aIControllerGetModelStats>>,
   TError = unknown,
 >(
-  modelId: string,
+  modelId: number,
   category: string,
   options?: {
     query?: UseQueryOptions<Awaited<ReturnType<typeof aIControllerGetModelStats>>, TError, TData>;
