@@ -44,6 +44,8 @@ import {
   IconStar,
 } from '@tabler/icons-react'
 import { useAppStore, type BusinessType, type Platform, type ContentGoal, type Tone, type Language, type VisualStyle } from '@/lib/store'
+import { getSmartPreset, isUsingSmartPreset } from '@/lib/smart-presets'
+import { notifications } from '@mantine/notifications'
 
 const steps = [
   { 
@@ -142,7 +144,26 @@ interface StepTimelineProps {
 }
 
 export function StepTimeline({ className, mobileMode = false }: StepTimelineProps) {
-  const { createFlow, setCreateFlowStep, updateCreateFlow } = useAppStore()
+  const { createFlow, setCreateFlowStep, updateCreateFlow, applySmartPreset } = useAppStore()
+
+  const handleBusinessTypeChange = (value: string | null) => {
+    if (!value) return
+    
+    const businessType = value as BusinessType
+    updateCreateFlow({ businessType })
+    
+    // Show smart preset notification with button
+    const preset = getSmartPreset(businessType)
+    const businessLabel = businessTypes.find(b => b.value === businessType)?.label
+    
+    notifications.show({
+      id: 'smart-preset-offer',
+      title: '✨ Smart Defaults Available',
+      message: `Click "Use Smart Defaults" to optimize settings for ${businessLabel}`,
+      color: 'violet',
+      autoClose: 5000,
+    })
+  }
 
   const isStepCompleted = (stepId: number) => {
     switch (stepId) {
@@ -174,74 +195,98 @@ export function StepTimeline({ className, mobileMode = false }: StepTimelineProp
     switch (stepId) {
       case 0:
         return (
-          <Select
-            placeholder="Select business type"
-            data={businessTypes.map(b => ({
-              value: b.value,
-              label: b.label,
-            }))}
-            value={createFlow.businessType}
-            onChange={(value) => updateCreateFlow({ businessType: value as BusinessType })}
-            size="md"
-            searchable
-            leftSection={
-              createFlow.businessType ? (
-                (() => {
-                  const selected = businessTypes.find(b => b.value === createFlow.businessType)
-                  if (selected) {
-                    const Icon = selected.icon
-                    return <Icon size={16} className="text-muted-foreground" />
-                  }
-                  return null
-                })()
-              ) : (
-                <IconBuilding size={16} className="text-muted-foreground" />
-              )
-            }
-            rightSection={
-              createFlow.businessType ? (
-                (() => {
-                  const selected = businessTypes.find(b => b.value === createFlow.businessType)
-                  if (selected) {
-                    return (
-                      <Badge size="sm" color={selected.color} variant="light">
-                        {selected.category}
-                      </Badge>
-                    )
-                  }
-                  return null
-                })()
-              ) : null
-            }
-            classNames={{
-              input: 'border-border bg-secondary/30 hover:bg-secondary/50 transition-colors',
-              option: 'hover:bg-secondary/80',
-            }}
-            styles={{
-              input: {
-                borderRadius: '8px',
-              },
-            }}
-            renderOption={({ option }) => {
-              const business = businessTypes.find(b => b.value === option.value)
-              if (!business) return option.label
-              const Icon = business.icon
-              return (
-                <Group wrap="nowrap" gap="sm" className="py-1">
-                  <Box className={`p-2 rounded-lg bg-${business.color}-50 dark:bg-${business.color}-950`}>
-                    <Icon size={18} className={`text-${business.color}-600 dark:text-${business.color}-400`} />
-                  </Box>
-                  <Box className="flex-1">
-                    <Text size="sm" fw={500}>{business.label}</Text>
-                    <Text size="xs" c="dimmed">{business.category}</Text>
-                  </Box>
-                  <Badge size="xs" color={business.color} variant="light">
-                    {business.category.split(' ')[0]}
-                  </Badge>
-                </Group>
-              )
-            }}
-          />
+          <Stack gap="sm">
+            <Select
+              placeholder="Select business type"
+              data={businessTypes.map(b => ({
+                value: b.value,
+                label: b.label,
+              }))}
+              value={createFlow.businessType}
+              onChange={handleBusinessTypeChange}
+              size="md"
+              searchable
+              leftSection={
+                createFlow.businessType ? (
+                  (() => {
+                    const selected = businessTypes.find(b => b.value === createFlow.businessType)
+                    if (selected) {
+                      const Icon = selected.icon
+                      return <Icon size={16} className="text-muted-foreground" />
+                    }
+                    return null
+                  })()
+                ) : (
+                  <IconBuilding size={16} className="text-muted-foreground" />
+                )
+              }
+              rightSection={
+                createFlow.businessType ? (
+                  (() => {
+                    const selected = businessTypes.find(b => b.value === createFlow.businessType)
+                    if (selected) {
+                      return (
+                        <Badge size="sm" color={selected.color} variant="light">
+                          {selected.category}
+                        </Badge>
+                      )
+                    }
+                    return null
+                  })()
+                ) : null
+              }
+              classNames={{
+                input: 'border-border bg-secondary/30 hover:bg-secondary/50 transition-colors',
+                option: 'hover:bg-secondary/80',
+              }}
+              styles={{
+                input: {
+                  borderRadius: '8px',
+                },
+              }}
+              renderOption={({ option }) => {
+                const business = businessTypes.find(b => b.value === option.value)
+                if (!business) return option.label
+                const Icon = business.icon
+                return (
+                  <Group wrap="nowrap" gap="sm" className="py-1">
+                    <Box className={`p-2 rounded-lg bg-${business.color}-50 dark:bg-${business.color}-950`}>
+                      <Icon size={18} className={`text-${business.color}-600 dark:text-${business.color}-400`} />
+                    </Box>
+                    <Box className="flex-1">
+                      <Text size="sm" fw={500}>{business.label}</Text>
+                      <Text size="xs" c="dimmed">{business.category}</Text>
+                    </Box>
+                    <Badge size="xs" color={business.color} variant="light">
+                      {business.category.split(' ')[0]}
+                    </Badge>
+                  </Group>
+                )
+              }}
+            />
+            
+            {createFlow.businessType && isUsingSmartPreset(createFlow.businessType, {
+              platforms: createFlow.platforms,
+              contentGoal: createFlow.contentGoal,
+              tone: createFlow.tone,
+              language: createFlow.language,
+              visualStyle: createFlow.visualStyle,
+            }) && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Box className="p-2 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                  <Group gap="xs">
+                    <IconCheck size={14} className="text-green-600 dark:text-green-400" />
+                    <Text size="xs" className="text-green-700 dark:text-green-300">
+                      Using smart defaults
+                    </Text>
+                  </Group>
+                </Box>
+              </motion.div>
+            )}
+          </Stack>
         )
       case 1:
         return (

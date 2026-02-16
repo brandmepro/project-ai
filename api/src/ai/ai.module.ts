@@ -11,6 +11,7 @@ import { AIModel } from './entities/ai-model.entity';
 import { AITaskCategory } from './entities/ai-task-category.entity';
 import { AIUserPreference } from './entities/ai-user-preference.entity';
 import { AIUserFeedback } from './entities/ai-user-feedback.entity';
+import { ContextModule } from '../context/context.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AIUserFeedback } from './entities/ai-user-feedback.entity';
       AIUserPreference,
       AIUserFeedback,
     ]),
+    ContextModule,
   ],
   providers: [
     AIGatewayService,

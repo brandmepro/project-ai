@@ -34,26 +34,49 @@ export function PullToRefresh({ children, onRefresh, disabled = false }: PullToR
     if (!container || container.scrollTop > 0) return
     
     startY.current = e.touches[0].clientY
-    setIsPulling(true)
+    currentY.current = startY.current
+    setIsPulling(false) // Don't set pulling yet, wait for movement
   }, [disabled, isRefreshing])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isPulling || disabled || isRefreshing) return
+    if (disabled || isRefreshing) return
     
     const container = containerRef.current
-    if (!container || container.scrollTop > 0) {
+    if (!container) return
+    
+    // If user is scrolling down in content, don't interfere
+    if (container.scrollTop > 0) {
       pullDistance.set(0)
+      setIsPulling(false)
       return
     }
     
     currentY.current = e.touches[0].clientY
-    const diff = Math.max(0, currentY.current - startY.current)
-    const dampedDiff = Math.min(MAX_PULL, diff * 0.5)
-    pullDistance.set(dampedDiff)
-  }, [isPulling, disabled, isRefreshing, pullDistance])
+    const diff = currentY.current - startY.current
+    
+    // Only activate pull-to-refresh when pulling down (positive diff) at top
+    if (diff > 0 && container.scrollTop === 0) {
+      setIsPulling(true)
+      const dampedDiff = Math.min(MAX_PULL, diff * 0.5)
+      pullDistance.set(dampedDiff)
+      
+      // Prevent default only when actually pulling
+      if (dampedDiff > 5) {
+        e.preventDefault()
+      }
+    } else {
+      // Allow normal scrolling
+      pullDistance.set(0)
+      setIsPulling(false)
+    }
+  }, [disabled, isRefreshing, pullDistance])
 
   const handleTouchEnd = useCallback(async () => {
-    if (!isPulling || disabled) return
+    if (!isPulling || disabled) {
+      setIsPulling(false)
+      pullDistance.set(0)
+      return
+    }
     
     setIsPulling(false)
     const distance = pullDistance.get()
@@ -76,10 +99,16 @@ export function PullToRefresh({ children, onRefresh, disabled = false }: PullToR
   return (
     <div 
       ref={containerRef}
-      className="relative h-full overflow-y-auto overscroll-none lg:overscroll-auto"
+      className="relative overflow-y-auto overscroll-y-contain lg:overscroll-auto"
+      style={{
+        height: '100vh',
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
+      }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
     >
       {/* Pull indicator */}
       <AnimatePresence>

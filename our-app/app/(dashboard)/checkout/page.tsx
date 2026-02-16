@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
@@ -17,6 +18,8 @@ import {
   List,
   ThemeIcon,
   Radio,
+  Loader,
+  Center,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { useState } from 'react'
@@ -95,7 +98,7 @@ const planDetails: Record<string, { name: string; price: number; period: string;
   },
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const planKey = searchParams.get('plan') || 'starter-monthly'
@@ -485,5 +488,24 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <Center style={{ minHeight: '60vh' }}>
+          <Stack align="center" gap="md">
+            <Loader size="lg" type="dots" color="violet" />
+            <Text size="lg" fw={500}>
+              Loading checkout...
+            </Text>
+          </Stack>
+        </Center>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   )
 }

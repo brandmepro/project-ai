@@ -17,6 +17,8 @@ export interface PromptContext {
   platform?: string;
   contentType?: string;
   goal?: string;
+  // NEW: Rich business context from memory system
+  businessContext?: string;
 }
 
 export class AIPrompts {
@@ -24,10 +26,16 @@ export class AIPrompts {
    * CONTENT IDEAS GENERATION
    */
   static getIdeasSystemPrompt(ctx: PromptContext): string {
-    return `You are a social media marketing expert for local businesses in India.
+    const basePrompt = `You are a social media marketing expert for local businesses in India.
 Generate engaging, relevant content ideas that are culturally appropriate and trend-aware.
 Focus on ${ctx.businessType} businesses.
 Consider current trends, festivals, and local context.`;
+
+    if (ctx.businessContext) {
+      return `${basePrompt}\n\n${ctx.businessContext}`;
+    }
+
+    return basePrompt;
   }
 
   static getIdeasPrompt(ctx: PromptContext): string {
@@ -67,11 +75,17 @@ Respond with valid JSON in this exact format:
    * CAPTION GENERATION
    */
   static getCaptionSystemPrompt(ctx: PromptContext): string {
-    return `You are a social media copywriter expert for local businesses in India.
+    const basePrompt = `You are a social media copywriter expert for local businesses in India.
 Write engaging captions in a ${ctx.tone} tone and ${ctx.language} language.
 Keep captions concise, engaging, and culturally relevant.
 Use appropriate emojis when suitable for the tone.
 Include call-to-action when relevant.`;
+
+    if (ctx.businessContext) {
+      return `${basePrompt}\n\n${ctx.businessContext}`;
+    }
+
+    return basePrompt;
   }
 
   static getCaptionPrompt(ctx: PromptContext): string {
@@ -104,9 +118,15 @@ Respond with valid JSON:
    * HOOKS GENERATION
    */
   static getHooksSystemPrompt(ctx: PromptContext): string {
-    return `You are an expert in creating viral social media hooks that grab attention in the first 3 seconds.
+    const basePrompt = `You are an expert in creating viral social media hooks that grab attention in the first 3 seconds.
 Generate hooks suitable for ${ctx.businessType} businesses in India.
 Focus on ${ctx.language} language patterns and cultural references.`;
+
+    if (ctx.businessContext) {
+      return `${basePrompt}\n\n${ctx.businessContext}`;
+    }
+
+    return basePrompt;
   }
 
   static getHooksPrompt(ctx: PromptContext): string {
@@ -133,10 +153,16 @@ Respond with valid JSON:
    * HASHTAGS GENERATION
    */
   static getHashtagsSystemPrompt(ctx: PromptContext): string {
-    return `You are a social media SEO expert specializing in hashtag optimization for ${ctx.platform}.
+    const basePrompt = `You are a social media SEO expert specializing in hashtag optimization for ${ctx.platform}.
 Generate relevant, trending, and niche hashtags for local businesses in India.
 Consider current trends, searchability, and engagement potential.
 Balance between high-volume and niche hashtags for optimal reach.`;
+
+    if (ctx.businessContext) {
+      return `${basePrompt}\n\n${ctx.businessContext}`;
+    }
+
+    return basePrompt;
   }
 
   static getHashtagsPrompt(ctx: PromptContext): string {
@@ -166,9 +192,15 @@ IMPORTANT: Do NOT include the # symbol in hashtags. Return only the text.`;
    * CONTENT ENHANCEMENT (for editing scenarios)
    */
   static getEnhancementSystemPrompt(ctx: PromptContext): string {
-    return `You are a content optimization expert.
+    const basePrompt = `You are a content optimization expert.
 Analyze the provided content and suggest improvements.
 Focus on engagement, clarity, and platform best practices.`;
+
+    if (ctx.businessContext) {
+      return `${basePrompt}\n\n${ctx.businessContext}`;
+    }
+
+    return basePrompt;
   }
 
   static getEnhancementPrompt(ctx: PromptContext): string {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Text, Stack, SimpleGrid, Box, Loader, Center } from '@mantine/core'
@@ -18,7 +18,7 @@ import { RecentContent } from '@/components/dashboard/recent-content'
 import { OnboardingModal } from '@/components/dashboard/onboarding-modal'
 import { useDashboardControllerGetStats, useUsersControllerGetProfile } from '@businesspro/api-client'
 
-export default function DashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams()
   const { data: dashboardData, isLoading, error } = useDashboardControllerGetStats()
   const { data: userProfile, refetch: refetchProfile } = useUsersControllerGetProfile()
@@ -198,5 +198,24 @@ export default function DashboardPage() {
       </SimpleGrid>
     </div>
     </>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <Center h="50vh">
+          <Stack align="center" gap="md">
+            <Loader size="lg" type="dots" color="violet" />
+            <Text size="lg" fw={500}>
+              Loading dashboard...
+            </Text>
+          </Stack>
+        </Center>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   )
 }

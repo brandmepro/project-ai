@@ -17,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { SettingsModule } from './settings/settings.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ContextModule } from './context/context.module';
 import { AIModule } from './ai/ai.module';
 import { ContentModule } from './content/content.module';
 import { AnalyticsModule } from './analytics/analytics.module';
@@ -54,6 +55,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     UsersModule,
     SettingsModule,
     NotificationsModule,
+    ContextModule,
     AIModule,
     ContentModule,
     AnalyticsModule,

@@ -5,6 +5,8 @@ import { AIUserFeedback } from '../entities/ai-user-feedback.entity';
 import { AIUserPreference } from '../entities/ai-user-preference.entity';
 import { AIModel } from '../entities/ai-model.entity';
 import { FeedbackType, AITaskCategory } from '../types/ai-types';
+import { MemoryManagerService } from '../../context/services/memory-manager.service';
+import { MemoryCategory } from '../../context/entities/ai-memory.entity';
 
 @Injectable()
 export class FeedbackService {
@@ -15,6 +17,7 @@ export class FeedbackService {
     private preferenceRepository: Repository<AIUserPreference>,
     @InjectRepository(AIModel)
     private modelRepository: Repository<AIModel>,
+    private memoryManager: MemoryManagerService,
   ) {}
 
   /**
@@ -28,6 +31,8 @@ export class FeedbackService {
     feedbackType: FeedbackType,
     qualityRating?: number,
     reason?: string,
+    generatedContent?: string,
+    editedContent?: string,
   ): Promise<void> {
     // Get model internal ID
     const model = await this.modelRepository.findOne({
@@ -56,6 +61,16 @@ export class FeedbackService {
       category,
       feedbackType,
       qualityRating,
+    );
+
+    // AUTO-LEARNING: Create memories from feedback
+    await this.learnFromFeedback(
+      userId,
+      feedbackType,
+      category,
+      reason,
+      generatedContent,
+      editedContent,
     );
   }
 
@@ -231,5 +246,135 @@ export class FeedbackService {
       averageQuality,
       likeRatio,
     };
+  }
+
+  /**
+   * AUTO-LEARNING: Learn from user feedback
+   */
+  private async learnFromFeedback(
+    userId: number,
+    feedbackType: FeedbackType,
+    category: AITaskCategory,
+    reason?: string,
+    generatedContent?: string,
+    editedContent?: string,
+  ): Promise<void> {
+    try {
+      // Learn from user edits (corrections)
+      if (editedContent && generatedContent && editedContent !== generatedContent) {
+        await this.memoryManager.learnFromCorrection(
+          userId,
+          generatedContent,
+          editedContent,
+          {
+            taskType: this.mapCategoryToTaskType(category),
+            category: MemoryCategory.CORRECTION,
+          },
+        );
+      }
+
+      // Learn from negative feedback with reasons
+      if (feedbackType === FeedbackType.DISLIKE && reason) {
+        await this.memoryManager.createMemory({
+          userId,
+          content: `User dislikes: ${reason}`,
+          category: MemoryCategory.AVOID_PATTERN,
+          source: 'user_feedback' as any,
+          importance: 0.7,
+          relatedTaskType: this.mapCategoryToTaskType(category),
+          tags: ['dislike', 'avoid', 'feedback'],
+        });
+      }
+
+      // Learn from positive feedback patterns
+      if (feedbackType === FeedbackType.LIKE && generatedContent) {
+        // Extract patterns from successful content
+        const patterns = this.extractSuccessPatterns(generatedContent, category);
+        if (patterns) {
+          await this.memoryManager.createMemory({
+            userId,
+            content: patterns,
+            category: MemoryCategory.SUCCESS_PATTERN,
+            source: 'user_feedback' as any,
+            importance: 0.8,
+            relatedTaskType: this.mapCategoryToTaskType(category),
+            tags: ['like', 'success', 'feedback'],
+          });
+        }
+      }
+
+      // Learn from regenerates (indicates something was wrong)
+      if (feedbackType === FeedbackType.REGENERATE && reason) {
+        await this.memoryManager.createMemory({
+          userId,
+          content: `Content regenerated because: ${reason}`,
+          category: MemoryCategory.PREFERENCE,
+          source: 'user_feedback' as any,
+          importance: 0.6,
+          relatedTaskType: this.mapCategoryToTaskType(category),
+          tags: ['regenerate', 'improvement'],
+        });
+      }
+    } catch (error) {
+      // Don't fail the feedback recording if learning fails
+      console.error('Auto-learning from feedback failed:', error);
+    }
+  }
+
+  /**
+   * Extract success patterns from well-received content
+   */
+  private extractSuccessPatterns(content: string, category: AITaskCategory): string | null {
+    if (!content) return null;
+
+    const patterns: string[] = [];
+
+    // Check for emoji usage
+    const emojiCount = (content.match(/[\u{1F300}-\u{1F9FF}]/gu) || []).length;
+    if (emojiCount > 0) {
+      patterns.push(`uses ${emojiCount === 1 ? 'minimal' : emojiCount <= 3 ? 'moderate' : 'heavy'} emoji usage`);
+    }
+
+    // Check for hashtags
+    const hashtagCount = (content.match(/#\w+/g) || []).length;
+    if (hashtagCount > 0) {
+      patterns.push(`includes ${hashtagCount} hashtags`);
+    }
+
+    // Check for questions
+    if (content.includes('?')) {
+      patterns.push('uses questions to engage');
+    }
+
+    // Check for call-to-action
+    const ctaKeywords = ['click', 'shop', 'visit', 'follow', 'like', 'comment', 'share', 'tag'];
+    if (ctaKeywords.some(kw => content.toLowerCase().includes(kw))) {
+      patterns.push('includes call-to-action');
+    }
+
+    // Check content length
+    if (content.length < 50) {
+      patterns.push('prefers short, concise content');
+    } else if (content.length > 200) {
+      patterns.push('prefers detailed, longer content');
+    }
+
+    if (patterns.length === 0) return null;
+
+    return `Successful ${category} content: ${patterns.join(', ')}`;
+  }
+
+  /**
+   * Map task category to task type
+   */
+  private mapCategoryToTaskType(category: AITaskCategory): string {
+    const mapping = {
+      [AITaskCategory.CONTENT_IDEAS]: 'generate_ideas',
+      [AITaskCategory.CONTENT_CAPTION]: 'caption_generation',
+      [AITaskCategory.CONTENT_HOOKS]: 'hook_generation',
+      [AITaskCategory.CONTENT_HASHTAGS]: 'hashtag_generation',
+    };
+
+    return mapping[category] || 'general';
   }
 }

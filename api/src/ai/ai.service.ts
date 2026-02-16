@@ -9,6 +9,7 @@ import { AIGatewayService } from './services/ai-gateway.service';
 import { AIModel, AIFeature, AIResponseMetadata } from '@businesspro/ai';
 import { AIPrompts } from './prompts/ai-prompts';
 import { ModelOptimizerService } from './services/model-optimizer.service';
+import { ContextBuilderService } from '../context/services/context-builder.service';
 
 // DTOs
 class GenerateIdeasRequest { businessType: string; platforms: string[]; contentGoal: string; tone: string; language: string; visualStyle: string; context?: string; imageUrl?: string; }
@@ -27,8 +28,9 @@ export class AIService {
     private modelSelectionService: ModelSelectionService,
     private aiGatewayService: AIGatewayService,
     private modelOptimizerService: ModelOptimizerService,
+    private contextBuilderService: ContextBuilderService,
   ) {
-    this.logger.log('AI Service initialized');
+    this.logger.log('AI Service initialized with Context Memory System');
   }
 
   /**
@@ -58,8 +60,22 @@ export class AIService {
   ) {
     const gateway = this.aiGatewayService.getGateway();
     
-    const systemPrompt = AIPrompts.getIdeasSystemPrompt(request);
-    const prompt = AIPrompts.getIdeasPrompt(request);
+    // Build AI context from memory system
+    const contextResult = await this.contextBuilderService.buildContext({
+      userId,
+      taskType: 'generate_ideas',
+      platform: request.platforms?.[0],
+      additionalContext: request.context,
+      maxTokens: 600, // Allow for task-specific context
+    });
+
+    const promptContext = {
+      ...request,
+      businessContext: contextResult.contextString,
+    };
+    
+    const systemPrompt = AIPrompts.getIdeasSystemPrompt(promptContext);
+    const prompt = AIPrompts.getIdeasPrompt(promptContext);
 
     const startTime = Date.now();
     
@@ -67,12 +83,12 @@ export class AIService {
     const taskAnalysis = await this.modelOptimizerService.analyzeTask(
       'generate_ideas',
       !!request.imageUrl,
-      (request.context?.length || 0) + JSON.stringify(request).length,
+      (request.context?.length || 0) + JSON.stringify(request).length + contextResult.tokensUsed,
       true,
     );
 
     this.logger.log(
-      `Generating ideas for user ${userId}, business: ${request.businessType}, model: ${taskAnalysis.recommendedModelId}, reason: ${taskAnalysis.reason}`,
+      `Generating ideas for user ${userId}, business: ${request.businessType}, model: ${taskAnalysis.recommendedModelId}, context: ${contextResult.tokensUsed} tokens (tier: ${contextResult.metadata.tier}), reason: ${taskAnalysis.reason}`,
     );
 
     try {
@@ -105,6 +121,8 @@ export class AIService {
           totalTokens: metadata.totalTokens,
           durationMs: duration,
           generatedAt: new Date(),
+          contextUsed: contextResult.tokensUsed,
+          contextTier: contextResult.metadata.tier,
         },
       };
     } catch (error) {
@@ -122,8 +140,22 @@ export class AIService {
   ) {
     const gateway = this.aiGatewayService.getGateway();
     
-    const systemPrompt = AIPrompts.getCaptionSystemPrompt(request);
-    const prompt = AIPrompts.getCaptionPrompt(request);
+    // Build AI context from memory system
+    const contextResult = await this.contextBuilderService.buildContext({
+      userId,
+      taskType: 'caption_generation',
+      platform: request.platform,
+      additionalContext: request.context,
+      maxTokens: 600,
+    });
+
+    const promptContext = {
+      ...request,
+      businessContext: contextResult.contextString,
+    };
+    
+    const systemPrompt = AIPrompts.getCaptionSystemPrompt(promptContext);
+    const prompt = AIPrompts.getCaptionPrompt(promptContext);
 
     // Build media URLs if provided
     const mediaUrls: { type: 'image' | 'video'; url: string }[] = [];
@@ -140,12 +172,12 @@ export class AIService {
     const taskAnalysis = await this.modelOptimizerService.analyzeTask(
       'generate_caption',
       mediaUrls.length > 0,
-      (request.context?.length || 0) + JSON.stringify(request).length,
+      (request.context?.length || 0) + JSON.stringify(request).length + contextResult.tokensUsed,
       request.tone === 'fun',
     );
 
     this.logger.log(
-      `Generating caption for user ${userId}, business: ${request.businessType}, model: ${taskAnalysis.recommendedModelId}${mediaUrls.length > 0 ? ', with media' : ''}, reason: ${taskAnalysis.reason}`,
+      `Generating caption for user ${userId}, business: ${request.businessType}, model: ${taskAnalysis.recommendedModelId}${mediaUrls.length > 0 ? ', with media' : ''}, context: ${contextResult.tokensUsed} tokens, reason: ${taskAnalysis.reason}`,
     );
 
     try {
@@ -182,6 +214,8 @@ export class AIService {
           costBucket: metadata.costBucket,
           totalTokens: metadata.totalTokens,
           durationMs: duration,
+          contextUsed: contextResult.tokensUsed,
+          contextTier: contextResult.metadata.tier,
         },
       };
     } catch (error) {
@@ -204,8 +238,20 @@ export class AIService {
   ) {
     const gateway = this.aiGatewayService.getGateway();
     
-    const systemPrompt = AIPrompts.getHooksSystemPrompt(request);
-    const prompt = AIPrompts.getHooksPrompt(request);
+    // Build AI context
+    const contextResult = await this.contextBuilderService.buildContext({
+      userId,
+      taskType: 'hook_generation',
+      maxTokens: 400,
+    });
+
+    const promptContext = {
+      ...request,
+      businessContext: contextResult.contextString,
+    };
+    
+    const systemPrompt = AIPrompts.getHooksSystemPrompt(promptContext);
+    const prompt = AIPrompts.getHooksPrompt(promptContext);
 
     const startTime = Date.now();
 
@@ -213,12 +259,12 @@ export class AIService {
     const taskAnalysis = await this.modelOptimizerService.analyzeTask(
       'generate_hooks',
       !!request.mediaUrl,
-      JSON.stringify(request).length,
+      JSON.stringify(request).length + contextResult.tokensUsed,
       true,
     );
 
     this.logger.log(
-      `Generating hooks for user ${userId}, business: ${request.businessType}, model: ${taskAnalysis.recommendedModelId}`,
+      `Generating hooks for user ${userId}, business: ${request.businessType}, model: ${taskAnalysis.recommendedModelId}, context: ${contextResult.tokensUsed} tokens`,
     );
 
     try {
@@ -249,6 +295,7 @@ export class AIService {
           costBucket: metadata.costBucket,
           totalTokens: metadata.totalTokens,
           durationMs: duration,
+          contextUsed: contextResult.tokensUsed,
         },
       };
     } catch (error) {
@@ -266,8 +313,21 @@ export class AIService {
   ) {
     const gateway = this.aiGatewayService.getGateway();
     
-    const systemPrompt = AIPrompts.getHashtagsSystemPrompt(request);
-    const prompt = AIPrompts.getHashtagsPrompt(request);
+    // Build AI context
+    const contextResult = await this.contextBuilderService.buildContext({
+      userId,
+      taskType: 'hashtag_generation',
+      platform: request.platform,
+      maxTokens: 400,
+    });
+
+    const promptContext = {
+      ...request,
+      businessContext: contextResult.contextString,
+    };
+    
+    const systemPrompt = AIPrompts.getHashtagsSystemPrompt(promptContext);
+    const prompt = AIPrompts.getHashtagsPrompt(promptContext);
 
     const startTime = Date.now();
 
@@ -275,12 +335,12 @@ export class AIService {
     const taskAnalysis = await this.modelOptimizerService.analyzeTask(
       'generate_hashtags',
       false,
-      request.caption.length,
+      request.caption.length + contextResult.tokensUsed,
       false,
     );
 
     this.logger.log(
-      `Generating hashtags for user ${userId}, platform: ${request.platform}, model: ${taskAnalysis.recommendedModelId}`,
+      `Generating hashtags for user ${userId}, platform: ${request.platform}, model: ${taskAnalysis.recommendedModelId}, context: ${contextResult.tokensUsed} tokens`,
     );
 
     try {
@@ -311,6 +371,7 @@ export class AIService {
           costBucket: metadata.costBucket,
           totalTokens: metadata.totalTokens,
           durationMs: duration,
+          contextUsed: contextResult.tokensUsed,
         },
       };
     } catch (error) {

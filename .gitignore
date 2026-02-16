@@ -13,6 +13,9 @@ build/
 out/
 **/.turbo/
 
+# Mobile builds (Capacitor)
+our-app/mobile-builds/
+
 # Environment files
 # OS files
 .DS_Store

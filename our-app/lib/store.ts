@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { getSmartPreset } from './smart-presets'
 
 export type BusinessType = 'cafe' | 'kirana' | 'salon' | 'gym' | 'clinic' | 'restaurant' | 'boutique' | 'tea-shop'
 export type Platform = 'instagram' | 'facebook' | 'whatsapp' | 'google-business'
@@ -74,6 +75,7 @@ interface AppState {
   createFlow: CreateFlowState
   setCreateFlowStep: (step: number) => void
   updateCreateFlow: (updates: Partial<CreateFlowState>) => void
+  applySmartPreset: (businessType: BusinessType) => void
   resetCreateFlow: () => void
 }
 
@@ -136,5 +138,19 @@ export const useAppStore = create<AppState>((set) => ({
   updateCreateFlow: (updates) => set((state) => ({
     createFlow: { ...state.createFlow, ...updates }
   })),
+  applySmartPreset: (businessType) => set((state) => {
+    const preset = getSmartPreset(businessType)
+    return {
+      createFlow: {
+        ...state.createFlow,
+        businessType,
+        platforms: preset.platforms,
+        contentGoal: preset.contentGoal,
+        tone: preset.tone,
+        language: preset.language,
+        visualStyle: preset.visualStyle,
+      }
+    }
+  }),
   resetCreateFlow: () => set({ createFlow: initialCreateFlow }),
 }))

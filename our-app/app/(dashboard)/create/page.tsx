@@ -17,6 +17,7 @@ import {
 } from '@tabler/icons-react'
 import { ContentPreview } from '@/components/create/content-preview'
 import { StepTimeline } from '@/components/create/step-timeline'
+import { QuickActions } from '@/components/create/quick-actions'
 import { useAppStore } from '@/lib/store'
 import { useContentControllerCreate } from '@businesspro/api-client'
 import { notifications } from '@mantine/notifications'
@@ -271,9 +272,10 @@ export default function CreatePage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="w-80 xl:w-96 shrink-0"
+            className="w-80 xl:w-96 shrink-0 flex flex-col gap-4 overflow-y-auto"
           >
-            <StepTimeline className="h-full" />
+            <QuickActions onGenerateClick={() => {}} isGenerating={false} />
+            <StepTimeline className="flex-1" />
           </motion.div>
         )}
       </Box>
@@ -372,7 +374,10 @@ export default function CreatePage() {
       >
         <Box className="h-full flex flex-col">
           <Box className="flex-1 overflow-y-auto">
-            <StepTimeline className="h-full" mobileMode />
+            <Stack gap="md">
+              <QuickActions onGenerateClick={() => {}} isGenerating={false} />
+              <StepTimeline className="h-full" mobileMode />
+            </Stack>
           </Box>
           
           {/* Navigation buttons */}

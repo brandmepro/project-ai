@@ -48,7 +48,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
   )
 
   return (
-    <div className="min-h-screen bg-background" style={{ overflow: 'visible' }}>
+    <div className="min-h-screen bg-background">
       {/* Desktop Sidebar - hidden on mobile */}
       <div className="hidden lg:block">
         <Sidebar />
@@ -59,16 +59,19 @@ function AppLayoutContent({ children }: AppLayoutProps) {
         className="flex flex-col min-h-screen transition-all duration-200 ease-in-out"
         style={{
           marginLeft: 0,
-          overflow: 'visible',
         }}
       >
-        <style jsx global>{`
-          @media (min-width: 1024px) {
-            .main-content-area {
-              margin-left: ${sidebarCollapsed ? '72px' : '240px'};
-            }
-          }
-        `}</style>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              @media (min-width: 1024px) {
+                .main-content-area {
+                  margin-left: ${sidebarCollapsed ? '72px' : '240px'};
+                }
+              }
+            `
+          }}
+        />
         
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>

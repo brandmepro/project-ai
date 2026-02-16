@@ -6,6 +6,13 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable static export for Capacitor compatibility
+  output: 'export',
+  
+  // Skip OAuth callback during export (requires server-side rendering)
+  // For mobile, you'll need to implement deep linking instead
+  skipTrailingSlashRedirect: true,
+  
   typescript: {
     ignoreBuildErrors: true,
   },

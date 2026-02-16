@@ -128,18 +128,27 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
+    touch-action: pan-y pinch-zoom;
   }
   
   /* Ensure all containers allow scrolling on mobile */
   html {
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: scroll;
     height: 100%;
+    touch-action: pan-y pinch-zoom;
   }
   
   /* Fix for iOS Safari */
   body, #__next {
     min-height: 100vh;
     min-height: -webkit-fill-available;
+  }
+  
+  /* Ensure scrollable areas work on touch devices */
+  [class*="overflow-y-auto"],
+  [class*="overflow-auto"] {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 }

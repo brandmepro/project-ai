@@ -1,17 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { notifications } from '@mantine/notifications';
 import { setAuthTokens } from '@/lib/auth';
 import { Center, Loader, Stack, Text } from '@mantine/core';
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Prevent SSR/SSG issues
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
+    if (!isMounted) return;
+
     const processOAuthCallback = async () => {
       try {
         // Extract tokens from query params
@@ -60,7 +68,20 @@ export default function OAuthCallbackPage() {
     };
 
     processOAuthCallback();
-  }, [searchParams, router]);
+  }, [searchParams, router, isMounted]);
+
+  if (!isMounted) {
+    return (
+      <Center style={{ minHeight: '100vh' }}>
+        <Stack align="center" gap="md">
+          <Loader size="lg" type="dots" color="violet" />
+          <Text size="lg" fw={500}>
+            Loading...
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
 
   return (
     <Center style={{ minHeight: '100vh' }}>
@@ -74,5 +95,24 @@ export default function OAuthCallbackPage() {
         </Text>
       </Stack>
     </Center>
+  );
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <Center style={{ minHeight: '100vh' }}>
+          <Stack align="center" gap="md">
+            <Loader size="lg" type="dots" color="violet" />
+            <Text size="lg" fw={500}>
+              Loading...
+            </Text>
+          </Stack>
+        </Center>
+      }
+    >
+      <OAuthCallbackContent />
+    </Suspense>
   );
 }

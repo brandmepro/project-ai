@@ -4,11 +4,25 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "build:mobile": "next build && cap sync",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "cap:init": "cap init",
+    "cap:add:android": "cap add android",
+    "cap:add:ios": "cap add ios",
+    "cap:sync": "cap sync",
+    "cap:sync:android": "cap sync android",
+    "cap:sync:ios": "cap sync ios",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios",
+    "cap:run:android": "cap run android",
+    "cap:run:ios": "cap run ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
     "@businesspro/api-client": "workspace:*",
     "@businesspro/auth-ui": "workspace:*",
     "@businesspro/shared-utils": "workspace:*",
@@ -77,10 +91,12 @@
     "zustand": "5.0.10"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.0.0",
     "@tailwindcss/postcss": "^4.1.9",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "baseline-browser-mapping": "^2.9.19",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",
