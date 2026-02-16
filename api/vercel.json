@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "installCommand": "cd .. && bun install",
+  "buildCommand": "cd .. && bun run build:ai && cd api && bun run build",
   "builds": [
     {
       "src": "src/main.ts",

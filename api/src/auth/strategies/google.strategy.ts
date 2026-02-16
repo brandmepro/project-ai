@@ -24,16 +24,17 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: Profile,
     done: VerifyCallback,
   ): Promise<any> {
-    const { id, name, emails, photos } = profile;
+    const { id, emails, photos } = profile;
+    const displayName = profile.displayName || profile.name?.givenName || '';
 
     // Extract user information from Google profile
     const user = {
       googleId: id,
-      email: emails[0].value,
-      firstName: name.givenName,
-      lastName: name.familyName,
-      name: `${name.givenName} ${name.familyName}`,
-      picture: photos[0]?.value,
+      email: emails?.[0]?.value || '',
+      firstName: profile.name?.givenName || '',
+      lastName: profile.name?.familyName || '',
+      name: displayName,
+      picture: photos?.[0]?.value || '',
     };
 
     done(null, user);
