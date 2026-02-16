@@ -1,18 +1,4 @@
 {
-  "version": 2,
   "installCommand": "cd .. && bun install",
-  "buildCommand": "cd .. && bun run build:ai && cd api && bun run build",
-  "builds": [
-    {
-      "src": "src/main.ts",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "src/main.ts",
-      "methods": ["GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE", "HEAD"]
-    }
-  ]
+  "buildCommand": "cd .. && bun run build:ai && cd api && bun run build"
 }
