@@ -19,6 +19,7 @@
     "build": "bun run --filter @businesspro/ai build && bun run --filter @businesspro/auth-ui build && bun run --filter api build && bun run --filter my-v0-project build",
     "build:ai": "bun run --filter @businesspro/ai build",
     "build:auth-ui": "bun run --filter @businesspro/auth-ui build",
+    "build:shared-utils": "bun run --filter @businesspro/shared-utils build",
     "build:api": "bun run --filter api build",
     "build:web": "bun run --filter my-v0-project build",
     "build:mobile": "cd our-app ; bun run build:mobile",
@@ -48,6 +49,7 @@
     "mobile:open:ios": "cd our-app ; bun run cap:open:ios",
     "mobile:run:android": "cd our-app ; bun run cap:run:android",
     "mobile:run:ios": "cd our-app ; bun run cap:run:ios",
+    "setup": "bun scripts/setup.ts",
     "setup:java": "powershell -ExecutionPolicy Bypass -File ./packages/scripts/setup-java-env.ps1",
     "clean": "bun run --filter \"*\" --parallel exec rm -rf node_modules dist .next coverage",
     "clean:install": "bun run clean && rm -rf node_modules && bun install"

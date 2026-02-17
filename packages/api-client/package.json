@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Business Pro API client with React Query hooks",
   "private": true,
-  "type": "module",
   "main": "./ui-clients/index.ts",
   "module": "./ui-clients/index.ts",
   "types": "./ui-clients/index.ts",

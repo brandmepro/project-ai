@@ -7,9 +7,10 @@ members = [
 ]
 
 [install]
-# Revert to default isolated linker for stability
-# We will handle single instances via webpack aliases
-# linker = "hoisted"
+# Hoisted linker: forces ALL node_modules into root only
+# No sub-folder node_modules will be created in our-app/, api/, packages/*
+# This mirrors how npm/yarn workspaces work
+linker = "hoisted"
 
 [install.peer]
 # Automatically install peer dependencies

@@ -19,9 +19,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Transpile workspace packages
+  // Transpile workspace packages (all @businesspro/* must be here since they ship raw TS)
   transpilePackages: [
     '@businesspro/auth-ui',
+    '@businesspro/shared-utils',
+    '@businesspro/api-client',
     '@mantine/core', 
     '@mantine/hooks',
     '@mantine/form',

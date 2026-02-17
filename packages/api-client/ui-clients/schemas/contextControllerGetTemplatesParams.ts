@@ -6,6 +6,6 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface UpdateBusinessProfileDtoDTO {
-  [key: string]: unknown;
-}
+export type ContextControllerGetTemplatesParams = {
+  category: string;
+};

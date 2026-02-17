@@ -6,6 +6,6 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface UpdateBusinessProfileDtoDTO {
+export interface ContextPreviewDtoDTO {
   [key: string]: unknown;
 }
