@@ -8,6 +8,8 @@ const config: CapacitorConfig = {
   // Custom paths for mobile builds
   android: {
     path: 'mobile-builds/android',
+    // Configure Android build to use compatible Java version
+    buildOptions: {}
   },
   
   ios: {

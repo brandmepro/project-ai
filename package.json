@@ -48,6 +48,7 @@
     "mobile:open:ios": "cd our-app ; bun run cap:open:ios",
     "mobile:run:android": "cd our-app ; bun run cap:run:android",
     "mobile:run:ios": "cd our-app ; bun run cap:run:ios",
+    "setup:java": "powershell -ExecutionPolicy Bypass -File ./packages/scripts/setup-java-env.ps1",
     "clean": "bun run --filter \"*\" --parallel exec rm -rf node_modules dist .next coverage",
     "clean:install": "bun run clean && rm -rf node_modules && bun install"
   },
