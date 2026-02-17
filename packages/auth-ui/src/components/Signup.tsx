@@ -25,7 +25,6 @@ import {
   IconBrandGoogle,
   IconBrandFacebook,
   IconBuilding,
-  IconTarget,
   IconCheck,
   IconSparkles,
 } from '@tabler/icons-react';
@@ -72,14 +71,14 @@ export function Signup({
       goals: [],
     },
     validate: {
-      email: (value, values) => {
+      email: (value) => {
         if (activeStep === 0) {
           if (!value) return 'Email is required';
           if (!/^\S+@\S+$/.test(value)) return 'Invalid email address';
         }
         return null;
       },
-      password: (value, values) => {
+      password: (value) => {
         if (activeStep === 0) {
           if (!value) return 'Password is required';
           if (value.length < 8) return 'At least 8 characters';
