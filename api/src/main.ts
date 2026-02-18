@@ -1,12 +1,12 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+  const logger = new Logger('Bootstrap');
   const configService = app.get(ConfigService);
 
   const apiPrefix = configService.get<string>('API_PREFIX') || 'api/v1';
@@ -54,8 +54,13 @@ async function bootstrap() {
   const port = configService.get<number>('PORT') || 3000;
   await app.listen(port);
 
-  console.log(`🚀 Business Pro API running on: http://localhost:${port}/${apiPrefix}`);
-  console.log(`📚 API Docs (Swagger): http://localhost:${port}/${apiPrefix}/docs`);
+  const useRemoteDB = configService.get<string>('USE_REMOTE_DB') === 'true';
+  const dbLabel = useRemoteDB ? 'Supabase (Remote)' : 'PostgreSQL (Local)';
+  const dbName = useRemoteDB ? 'postgres' : configService.get<string>('LOCAL_DATABASE_NAME') || 'businesspro';
+
+  logger.log(`Application is running on: http://localhost:${port}/${apiPrefix}`);
+  logger.log(`Swagger docs available at: http://localhost:${port}/${apiPrefix}/docs`);
+  logger.log(`Database connected successfully - ${dbLabel} | DB: ${dbName}`);
 }
 
 bootstrap();
