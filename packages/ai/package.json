@@ -13,8 +13,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
-    "prepare": "bun run build"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "ai": "^5.0.0"
