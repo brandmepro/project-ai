@@ -14,8 +14,9 @@ build
 # Mobile builds
 our-app/mobile-builds
 
-# Frontend app (not needed for API build)
+# Frontend app (not needed for API build — but package.json needed for bun workspace resolution)
 our-app
+!our-app/package.json
 
 # Dev/test files
 coverage

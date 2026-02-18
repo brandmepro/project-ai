@@ -7,6 +7,7 @@ COPY package.json bun.lock* bunfig.toml ./
 # Copy only the package.json files needed for workspace dep resolution
 COPY api/package.json ./api/
 COPY packages/ai/package.json ./packages/ai/
+COPY our-app/package.json ./our-app/
 
 # Install all workspace dependencies (hoisted to root node_modules)
 RUN bun install --frozen-lockfile
