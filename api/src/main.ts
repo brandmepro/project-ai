@@ -3,6 +3,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -54,13 +55,24 @@ async function bootstrap() {
   const port = configService.get<number>('PORT') || 3000;
   await app.listen(port);
 
-  const useRemoteDB = configService.get<string>('USE_REMOTE_DB') === 'true';
-  const dbLabel = useRemoteDB ? 'Supabase (Remote)' : 'PostgreSQL (Local)';
-  const dbName = useRemoteDB ? 'postgres' : configService.get<string>('LOCAL_DATABASE_NAME') || 'businesspro';
-
   logger.log(`Application is running on: http://localhost:${port}/${apiPrefix}`);
   logger.log(`Swagger docs available at: http://localhost:${port}/${apiPrefix}/docs`);
-  logger.log(`Database connected successfully - ${dbLabel} | DB: ${dbName}`);
+
+  const useRemoteDB = configService.get<string>('USE_REMOTE_DB') === 'true';
+  const dbLabel = useRemoteDB ? 'Supabase (Remote)' : 'PostgreSQL (Local)';
+
+  try {
+    const dataSource = app.get(DataSource);
+    if (dataSource.isInitialized) {
+      const opts = dataSource.options as any;
+      const dbName = opts.database || (opts.url ? new URL(opts.url).pathname.replace('/', '') : 'unknown');
+      logger.log(`Database connected successfully - ${dbLabel} | DB: ${dbName}`);
+    } else {
+      logger.warn(`Database not initialized - ${dbLabel}`);
+    }
+  } catch (err) {
+    logger.error(`Database connection FAILED - ${dbLabel} | ${err.message}`);
+  }
 }
 
 bootstrap();

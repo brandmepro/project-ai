@@ -7,6 +7,7 @@ import {
   DeleteDateColumn,
   OneToMany,
   OneToOne,
+  Relation,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { BusinessType } from '../../common/enums';
@@ -79,10 +80,10 @@ export class User {
 
   // Relationships to dedicated tables
   @OneToOne(() => Settings, settings => settings.user, { eager: true, cascade: true })
-  settings: Settings;
+  settings: Relation<Settings>;
 
   @OneToOne(() => NotificationSettings, notificationSettings => notificationSettings.user, { eager: true, cascade: true })
-  notificationSettings: NotificationSettings;
+  notificationSettings: Relation<NotificationSettings>;
 
   @Column({ default: false, name: 'two_factor_enabled' })
   twoFactorEnabled: boolean;

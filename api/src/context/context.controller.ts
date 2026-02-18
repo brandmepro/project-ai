@@ -31,7 +31,7 @@ import {
   ContextPreviewDto,
 } from './dto/context.dto';
 
-@Controller('api/v1/context')
+@Controller('context')
 @UseGuards(JwtAuthGuard)
 export class ContextController {
   constructor(

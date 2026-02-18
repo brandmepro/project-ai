@@ -4,7 +4,23 @@ export class SeedAIModels1739448000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // First, alter table to add new columns
     await queryRunner.query(`
+      ALTER TABLE "ai_task_categories"
+      ADD COLUMN IF NOT EXISTS "required_capabilities" TEXT[] DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS "preferred_capabilities" TEXT[] DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS "default_priority" VARCHAR,
+      ADD COLUMN IF NOT EXISTS "default_complexity" VARCHAR,
+      ADD COLUMN IF NOT EXISTS "typical_max_tokens" INTEGER,
+      ADD COLUMN IF NOT EXISTS "typical_temperature" DECIMAL(4,2),
+      ADD COLUMN IF NOT EXISTS "tags" TEXT[] DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS "is_active" BOOLEAN DEFAULT true;
+    `);
+
+    await queryRunner.query(`
       ALTER TABLE "ai_models"
+      ADD COLUMN IF NOT EXISTS "version" VARCHAR,
+      ADD COLUMN IF NOT EXISTS "cost_bucket" VARCHAR,
+      ADD COLUMN IF NOT EXISTS "capabilities" TEXT[] DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS "metadata" JSONB DEFAULT '{}',
       ADD COLUMN IF NOT EXISTS "latency_ms" DECIMAL(10,2),
       ADD COLUMN IF NOT EXISTS "throughput_tps" INTEGER,
       ADD COLUMN IF NOT EXISTS "cost_per_1m_input" DECIMAL(10,4),
@@ -597,7 +613,7 @@ export class SeedAIModels1739448000000 implements MigrationInterface {
       await queryRunner.query(
         `
         INSERT INTO "ai_models" (
-          "model_id", "model_name", "provider", "version", "context_window", "max_tokens",
+          "model_id", "name", "provider", "version", "context_window", "max_output_tokens",
           "latency_ms", "throughput_tps", "cost_per_1m_input", "cost_per_1m_output",
           "cache_read_cost_per_1m", "cache_write_cost_per_1m", "image_gen_cost", "video_gen_cost",
           "web_search_cost", "cost_bucket", "capabilities", "supports_vision", "supports_streaming",
@@ -608,9 +624,9 @@ export class SeedAIModels1739448000000 implements MigrationInterface {
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
           $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31
         ) ON CONFLICT (model_id) DO UPDATE SET
-          model_name = EXCLUDED.model_name,
+          name = EXCLUDED.name,
           context_window = EXCLUDED.context_window,
-          max_tokens = EXCLUDED.max_tokens,
+          max_output_tokens = EXCLUDED.max_output_tokens,
           latency_ms = EXCLUDED.latency_ms,
           throughput_tps = EXCLUDED.throughput_tps,
           cost_per_1m_input = EXCLUDED.cost_per_1m_input,
@@ -745,12 +761,12 @@ export class SeedAIModels1739448000000 implements MigrationInterface {
       await queryRunner.query(
         `
         INSERT INTO "ai_task_categories" (
-          "category_key", "category_name", "description", "required_capabilities",
+          "key", "name", "description", "required_capabilities",
           "preferred_capabilities", "default_priority", "default_complexity",
           "typical_max_tokens", "typical_temperature", "tags", "is_active"
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        ON CONFLICT (category_key) DO UPDATE SET
-          category_name = EXCLUDED.category_name,
+        ON CONFLICT (key) DO UPDATE SET
+          name = EXCLUDED.name,
           description = EXCLUDED.description,
           updated_at = CURRENT_TIMESTAMP
         `,

@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  Relation,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -19,7 +20,7 @@ export class NotificationSettings {
 
   @OneToOne(() => User, user => user.notificationSettings, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Relation<User>;
 
   @Column({ type: 'boolean', default: true })
   email: boolean;

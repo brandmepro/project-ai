@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  Relation,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -19,7 +20,7 @@ export class Settings {
 
   @OneToOne(() => User, user => user.settings, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Relation<User>;
 
   // AI Settings
   @Column({ type: 'varchar', default: 'balanced', name: 'ai_priority' })

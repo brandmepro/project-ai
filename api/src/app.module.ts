@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -29,8 +30,15 @@ import { SchedulerModule } from './scheduler/scheduler.module';
 @Module({
   imports: [
     // Configuration
+    // envFilePath uses absolute path so it works regardless of which directory
+    // the process was started from (monorepo root vs api/ directly)
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [
+        join(__dirname, '../.env'),   // compiled: api/dist/../.env  = api/.env
+        join(__dirname, '../../.env'), // fallback one level up
+        '.env',                        // last resort: process.cwd()/.env
+      ],
       load: [databaseConfig, jwtConfig, aiConfig],
     }),
 
