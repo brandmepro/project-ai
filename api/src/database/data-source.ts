@@ -1,5 +1,8 @@
 import * as path from 'path';
 import { DataSource } from 'typeorm';
+import { loadApiEnv } from '../config/load-env';
+
+loadApiEnv();
 
 const useRemote = process.env.USE_REMOTE_DB === 'true';
 const remoteUrl = process.env.SUPABASE_DATABASE_URL;

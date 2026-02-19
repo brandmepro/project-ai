@@ -12,6 +12,7 @@ import { AppController } from './app.controller';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import aiConfig from './config/ai.config';
+import { loadApiEnv } from './config/load-env';
 
 // Modules
 import { AuthModule } from './auth/auth.module';
@@ -26,6 +27,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { PlatformsModule } from './platforms/platforms.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
+
+loadApiEnv();
 
 @Module({
   imports: [

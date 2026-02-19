@@ -5,13 +5,35 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 const logger = new Logger('DatabaseConfig');
 
+const TRUE_VALUES = new Set(['true', '1', 'yes', 'on']);
+
+function readBooleanEnv(keys: string[], fallback = false): boolean {
+  for (const key of keys) {
+    const raw = process.env[key];
+    if (raw === undefined) continue;
+    return TRUE_VALUES.has(raw.trim().toLowerCase());
+  }
+  return fallback;
+}
+
 export default registerAs('database', (): TypeOrmModuleOptions => {
   const isDevelopment = process.env.NODE_ENV === 'development';
   const useRemoteDB = process.env.USE_REMOTE_DB === 'true';
 
-  let synchronize = process.env.DB_SYNCHRONIZE === 'true';
-  const migrationsRun = process.env.DB_MIGRATIONS_RUN === 'true';
-  const logging = process.env.DB_LOGGING === 'true';
+  let synchronize = readBooleanEnv([
+    'DB_SYNCHRONIZE',
+    'DB_SYNC',
+    'DB_SYNC_TEST',
+    'DATABASE_SYNCHRONIZE',
+  ]);
+  const migrationsRun = readBooleanEnv([
+    'DB_MIGRATIONS_RUN',
+    'DB_MIGRATION_RUN',
+    'DB_MIGRATION',
+    'DATABASE_MIGRATIONS_RUN',
+    'DATABASE_MIGRATION_RUN',
+  ]);
+  const logging = readBooleanEnv(['DB_LOGGING', 'DATABASE_LOGGING']);
 
   // CRITICAL: Never run both synchronize AND migrationsRun simultaneously.
   // Migrations create PostgreSQL ENUM types (e.g. memory_category, memory_source).
