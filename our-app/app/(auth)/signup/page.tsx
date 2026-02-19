@@ -8,7 +8,6 @@ import {
   useAuthControllerRegister, 
   RegisterDtoDTO, 
   RegisterDtoDTOBusinessType,
-  ApiError 
 } from '@businesspro/api-client';
 
 const BUSINESS_TYPES = [
@@ -28,27 +27,8 @@ export default function SignupPage() {
   const registerMutation = useAuthControllerRegister({
     mutation: {
       onSuccess: (response: any) => {
-        // Store tokens
         setAuthTokens(response.accessToken, response.refreshToken);
-        
-        notifications.show({
-          title: 'Welcome to BusinessPro! 🎉',
-          message: 'Your account has been created successfully',
-          color: 'green',
-        });
-        
-        // Redirect to dashboard
         router.push('/dashboard');
-      },
-      onError: (error: unknown) => {
-        const apiError = error as ApiError;
-        const errorMessage = apiError?.messages?.[0] || 'Failed to create account';
-        
-        notifications.show({
-          title: 'Signup Failed',
-          message: errorMessage,
-          color: 'red',
-        });
       },
     },
   });
@@ -70,7 +50,10 @@ export default function SignupPage() {
       goals: data.goals,
     };
 
-    registerMutation.mutate({ data: signupData });
+    // mutateAsync throws on API error — this lets the Signup component's
+    // try/catch block catch it and stay on the current step instead of
+    // advancing to the success screen prematurely.
+    await registerMutation.mutateAsync({ data: signupData });
   };
 
   const handleSocialSignup = async (provider: 'google' | 'facebook') => {

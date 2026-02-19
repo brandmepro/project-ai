@@ -59,6 +59,7 @@ export function Signup({
   const [isLoading, setIsLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const totalSteps = 5;
 
   const form = useForm<OnboardingData>({
@@ -119,15 +120,20 @@ export function Signup({
   const handleSubmit = async (values: OnboardingData) => {
     try {
       setIsLoading(true);
+      setSubmitError(null);
       await onSignup({
         ...values,
         goals: selectedGoals,
       });
-      // On success, move to final step
+      // Only advance to success screen if API call succeeds
       setActiveStep(4);
-    } catch (error) {
-      console.error('Signup error:', error);
-      // Stay on current step if error
+    } catch (error: any) {
+      // Stay on goals step and show the API error
+      const message =
+        error?.messages?.[0] ||
+        error?.message ||
+        'Failed to create account. Please try again.';
+      setSubmitError(message);
     } finally {
       setIsLoading(false);
     }
@@ -147,6 +153,7 @@ export function Signup({
   };
 
   const toggleGoal = (goal: string) => {
+    setSubmitError(null);
     setSelectedGoals((prev) =>
       prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal]
     );
@@ -464,6 +471,12 @@ export function Signup({
                   {selectedGoals.length === 0 && (
                     <Text size="xs" c="red" mt="xs">
                       Please select at least one goal to continue
+                    </Text>
+                  )}
+
+                  {submitError && (
+                    <Text size="sm" c="red" mt="xs" ta="center">
+                      {submitError}
                     </Text>
                   )}
 
