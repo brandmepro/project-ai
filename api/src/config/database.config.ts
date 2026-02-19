@@ -50,10 +50,12 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
     migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
     logging,
     extra: {
-      max: useRemoteDB ? 5 : 10,
-      min: 1,
-      connectionTimeoutMillis: 15000,
-      idleTimeoutMillis: 30000,
+      max: useRemoteDB ? 10 : 10,
+      min: useRemoteDB ? 2 : 1,       // keep min 2 connections warm at all times
+      connectionTimeoutMillis: 30000, // 30s — accounts for cross-region latency
+      idleTimeoutMillis: 60000,       // keep connections alive longer
+      keepAlive: true,                // prevent idle connections from being dropped
+      keepAliveInitialDelayMillis: 10000,
     },
   };
 
