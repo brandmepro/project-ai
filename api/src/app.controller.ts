@@ -13,7 +13,7 @@ export class AppController {
     const opts = this.dataSource.options as any;
     const dbName = opts.database || (opts.url ? new URL(opts.url).pathname.replace('/', '') : 'unknown');
     const useRemote = process.env.USE_REMOTE_DB === 'true';
-    const type = useRemote ? 'Supabase (Remote)' : 'PostgreSQL (Local)';
+    const type = useRemote ? 'Supabase (Direct)' : 'PostgreSQL (Local)';
 
     if (!this.dataSource.isInitialized) {
       return { connected: false, type, database: dbName, latencyMs: null };

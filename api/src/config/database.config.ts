@@ -42,6 +42,12 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
   logger.log(`Connecting to ${useRemoteDB ? 'REMOTE Supabase (Session Pooler)' : 'LOCAL PostgreSQL'} | Host: ${displayHost} | DB: ${displayDb}`);
   logger.log(`synchronize=${synchronize} | migrationsRun=${migrationsRun} | logging=${logging}`);
 
+  // Remote (Supabase Direct): up to 10 persistent connections — Direct Connection supports
+  // long-lived connections unlike the Session Pooler which drops idle ones after ~5 min.
+  // Local: 10 — unconstrained local Postgres.
+  const poolMax = useRemoteDB ? 10 : 10;
+  const poolMin = useRemoteDB ? 2 : 1;
+
   const shared = {
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     autoLoadEntities: true as const,
@@ -49,12 +55,13 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
     migrationsRun,
     migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
     logging,
+    poolSize: poolMax,
     extra: {
-      max: useRemoteDB ? 10 : 10,
-      min: useRemoteDB ? 2 : 1,       // keep min 2 connections warm at all times
-      connectionTimeoutMillis: 30000, // 30s — accounts for cross-region latency
-      idleTimeoutMillis: 60000,       // keep connections alive longer
-      keepAlive: true,                // prevent idle connections from being dropped
+      max: poolMax,
+      min: poolMin,
+      connectionTimeoutMillis: 30000,
+      idleTimeoutMillis: 600000, // 10 min — Direct Connection handles long-lived idle fine
+      keepAlive: true,
       keepAliveInitialDelayMillis: 10000,
     },
   };
@@ -65,7 +72,6 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
       url: remoteUrl,
       schema: 'public',
       ssl: { rejectUnauthorized: false },
-      poolSize: 5,
       ...shared,
     };
   }
@@ -78,7 +84,6 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
     password: process.env.LOCAL_DATABASE_PASSWORD || 'postgres',
     database: process.env.LOCAL_DATABASE_NAME || 'businesspro',
     schema: 'public',
-    poolSize: 10,
     ...shared,
   };
 });
