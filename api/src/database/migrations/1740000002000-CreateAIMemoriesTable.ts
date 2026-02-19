@@ -2,6 +2,10 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateAIMemoriesTable1740000002000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // uuid_generate_v4() requires the uuid-ossp extension.
+    // Supabase enables it by default; local PostgreSQL does not — safe to always run.
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+
     // Create enum types
     await queryRunner.query(`
       CREATE TYPE memory_category AS ENUM (

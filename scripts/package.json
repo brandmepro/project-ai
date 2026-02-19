@@ -1,0 +1,13 @@
+{
+  "name": "businesspro-scripts",
+  "version": "1.0.0",
+  "description": "Dev utility scripts for BusinessPro",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "inquirer": "^8.2.6"
+  }
+}

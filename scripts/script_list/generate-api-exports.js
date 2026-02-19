@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const UI_CLIENTS_PATH = join(__dirname, '../packages/api-client/ui-clients');
+const UI_CLIENTS_PATH = join(__dirname, '../../packages/api-client/ui-clients');
 
 // Get all folders in ui-clients directory
 function getFolders(path) {
