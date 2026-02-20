@@ -44,6 +44,8 @@ COPY --from=builder /app/packages/ai/package.json ./packages/ai/package.json
 # Copy api package.json (needed by node for module resolution)
 COPY --from=builder /app/api/package.json ./api/package.json
 
-EXPOSE 8000
+# Railway injects $PORT at runtime — do not hardcode a port here.
+# The app reads process.env.PORT and binds to 0.0.0.0 so Railway's proxy can reach it.
+EXPOSE $PORT
 
 CMD ["node", "api/dist/main"]

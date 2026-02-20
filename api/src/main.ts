@@ -52,10 +52,12 @@ async function bootstrap() {
     jsonDocumentUrl: `${apiPrefix}/docs-json`,
   });
 
+  // Railway injects $PORT dynamically — never hardcode a port in Railway Variables.
+  // Binding to 0.0.0.0 is required; Railway's proxy won't reach 127.0.0.1.
   const port = configService.get<number>('PORT') || 3000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
-  logger.log(`Application is running on: http://localhost:${port}/${apiPrefix}`);
+  logger.log(`Application is running on: http://0.0.0.0:${port}/${apiPrefix}`);
   logger.log(`Swagger docs available at: http://localhost:${port}/${apiPrefix}/docs`);
 
   const useRemoteDB = configService.get<string>('USE_REMOTE_DB') === 'true';
