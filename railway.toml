@@ -1,11 +1,14 @@
 [deploy]
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+
+# Migrations run here BEFORE the main process starts.
+# Railway waits for this command to exit (0 = success) before launching the app.
+# The health check does NOT begin until the main process starts, so long-running
+# migrations no longer cause health check failures.
+preDeployCommand = "node api/dist/database/migrate.js"
+
 healthcheckPath = "/"
-# NestJS startup timeline on Railway:
-#   ~5s  — modules load
-#   ~5s  — Supabase Direct connection established
-#   ~30s — TypeORM migrations run (15 migrations on a fresh DB)
-#   ~40s — app.listen() called, HTTP server ready
-# 30s timeout was guaranteed to fail. 120s gives plenty of room.
-healthcheckTimeout = 120
+# App now starts with DB_MIGRATIONS_RUN=false (no migrations at boot),
+# so it's HTTP-ready in ~10s. 60s is more than enough.
+healthcheckTimeout = 60
