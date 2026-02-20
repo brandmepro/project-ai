@@ -108,9 +108,18 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
   };
 
   if (useRemoteDB && remoteUrl) {
+    // Do NOT use `url:` here. When TypeORM passes a connectionString to the pg
+    // Pool, pg parses it internally and the `family: 4` in `extra` is ignored.
+    // Passing discrete params ensures pg honours `family: 4` and only resolves
+    // A (IPv4) records — preventing ENETUNREACH on Railway's IPv6-capable DNS.
+    const u = new URL(remoteUrl);
     return {
       type: 'postgres',
-      url: remoteUrl,
+      host: u.hostname,
+      port: parseInt(u.port || '5432', 10),
+      username: decodeURIComponent(u.username),
+      password: decodeURIComponent(u.password),
+      database: u.pathname.replace(/^\//, ''),
       schema: 'public',
       ssl: { rejectUnauthorized: false },
       ...shared,
