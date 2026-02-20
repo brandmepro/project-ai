@@ -31,4 +31,10 @@ export const AppDataSource = new DataSource({
   synchronize: false,
   logging: true,
   logger: 'advanced-console',
+
+  // Force IPv4: Railway's network has no IPv6 route so DNS returning an
+  // AAAA record causes ENETUNREACH. family:4 tells pg to only resolve A records.
+  extra: {
+    family: 4,
+  },
 });

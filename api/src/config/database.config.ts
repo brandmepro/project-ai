@@ -100,6 +100,10 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
       idleTimeoutMillis: 600000,
       keepAlive: true,
       keepAliveInitialDelayMillis: 10000,
+      // Force IPv4: Railway's network has no IPv6 route; DNS may return an AAAA
+      // record for Supabase which causes ENETUNREACH. family:4 tells pg to only
+      // resolve A (IPv4) records.
+      family: 4,
     },
   };
 
