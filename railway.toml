@@ -2,4 +2,10 @@
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 healthcheckPath = "/"
-healthcheckTimeout = 30
+# NestJS startup timeline on Railway:
+#   ~5s  — modules load
+#   ~5s  — Supabase Direct connection established
+#   ~30s — TypeORM migrations run (15 migrations on a fresh DB)
+#   ~40s — app.listen() called, HTTP server ready
+# 30s timeout was guaranteed to fail. 120s gives plenty of room.
+healthcheckTimeout = 120
