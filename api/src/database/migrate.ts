@@ -1,9 +1,17 @@
 /**
  * Standalone migration runner for Railway's preDeployCommand.
  *
- * Railway runs this BEFORE the main process starts, so the HTTP server
- * doesn't exist yet and no health check is active. Migrations complete
- * fully before the app starts, keeping startup fast and health checks clean.
+ * Railway runs this BEFORE the main process starts so migrations complete
+ * before the app boots and before health checks begin.
+ *
+ * URL resolution order for Railway target:
+ *   1. DATABASE_URL           — auto-injected by Railway for a linked Postgres service
+ *   2. RAILWAY_DATABASE_URL   — our custom var (must be a raw URL, NOT a ${{}} reference)
+ *   3. PGHOST + PGPORT + …    — individual pg env vars Railway sometimes injects
+ *
+ * NOTE: ${{Postgres.DATABASE_URL}} reference variables are NOT resolved during
+ * preDeployCommand — Railway only resolves them at main-container runtime.
+ * Always store RAILWAY_DATABASE_URL as a raw connection string on the dashboard.
  *
  * Usage (Railway preDeployCommand):
  *   node api/dist/database/migrate.js
@@ -17,24 +25,52 @@ loadApiEnv();
 
 const useRemote = process.env.USE_REMOTE_DB === 'true';
 
+/** Returns the first env-var value that looks like a real postgres URL (not a ${{}} reference). */
+function pickUrl(...candidates: Array<string | undefined>): string | undefined {
+  for (const v of candidates) {
+    if (v && v.startsWith('postgresql://') || v && v.startsWith('postgres://')) {
+      return v;
+    }
+  }
+  return undefined;
+}
+
 function buildConnectionConfig() {
   if (useRemote) {
     const { target, definition, url } = getActiveRemoteDb();
 
-    // On Railway CI the internal DATABASE_URL always wins (it's auto-injected).
-    // For other remotes, the registered env var is used.
-    const resolvedUrl =
-      target === RemoteDatabase.RAILWAY
-        ? (process.env.DATABASE_URL || url)   // prefer Railway's auto-injected var
-        : url;
+    let resolvedUrl: string | undefined;
+    let urlSource   = definition.envVar;
+
+    if (target === RemoteDatabase.RAILWAY) {
+      // Try every variable Railway may inject, in priority order.
+      resolvedUrl = pickUrl(
+        process.env.DATABASE_URL,           // auto-injected by Railway (linked Postgres service)
+        process.env.DATABASE_PRIVATE_URL,   // private-network variant
+        url,                                // our RAILWAY_DATABASE_URL (must be a raw string)
+        process.env.PGHOST
+          ? `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE}`
+          : undefined,
+      );
+
+      if (resolvedUrl === process.env.DATABASE_URL)         urlSource = 'DATABASE_URL';
+      else if (resolvedUrl === process.env.DATABASE_PRIVATE_URL) urlSource = 'DATABASE_PRIVATE_URL';
+      else if (resolvedUrl === url)                         urlSource = definition.envVar;
+      else if (resolvedUrl)                                 urlSource = 'PGHOST/PGPORT/PGUSER/...';
+    } else {
+      resolvedUrl = url;
+    }
 
     if (!resolvedUrl) {
-      console.warn(
-        `[migrate] REMOTE_DB_TARGET="${target}" but ${definition.envVar} is not set. ` +
-        `Falling back to local PostgreSQL.`,
+      console.error(
+        `[migrate] ⛔ REMOTE_DB_TARGET="${target}" but no valid DB URL found.\n` +
+        `  Checked: DATABASE_URL, DATABASE_PRIVATE_URL, ${definition.envVar}, PGHOST.\n` +
+        `  Make sure "${definition.envVar}" is set to a raw postgresql:// string on Railway\n` +
+        `  (NOT a \${{}} reference — those don't resolve in preDeployCommand).\n` +
+        `  Falling back to local PostgreSQL.`,
       );
     } else {
-      console.log(`[migrate] Remote DB → ${definition.label}`);
+      console.log(`[migrate] Remote DB → ${definition.label}  (source: ${urlSource})`);
       const u = new URL(resolvedUrl.split('?')[0]);
       return {
         host:     u.hostname,
@@ -76,7 +112,7 @@ async function runMigrations() {
 
   console.log('=== Migration Runner ===');
   console.log(`DB mode  : ${label}`);
-  if (useRemote) console.log(`DB target: ${target} → ${definition.envVar}`);
+  if (useRemote) console.log(`DB target: ${target} → checking DATABASE_URL, DATABASE_PRIVATE_URL, ${definition.envVar}`);
 
   try {
     console.log('Connecting to database...');
