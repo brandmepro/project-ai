@@ -10,15 +10,17 @@ const useRemote = process.env.USE_REMOTE_DB === 'true';
 function buildConnectionConfig() {
   if (useRemote) {
     const { definition, url, target } = getActiveRemoteDb();
+    const resolvedUrl = url || (target === 'railway' ? process.env.DATABASE_URL : undefined);
 
-    if (!url) {
+    if (!resolvedUrl) {
       console.warn(
-        `[DataSource] REMOTE_DB_TARGET="${target}" but ${definition.envVar} is not set. ` +
+        `[DataSource] REMOTE_DB_TARGET="${target}" but neither ${definition.envVar} nor DATABASE_URL is set. ` +
         `Falling back to local PostgreSQL.`,
       );
     } else {
-      console.log(`[DataSource] Remote DB → ${definition.label} (${definition.envVar})`);
-      const u = new URL(url.split('?')[0]);
+      const urlSource = url ? definition.envVar : 'DATABASE_URL';
+      console.log(`[DataSource] Remote DB → ${definition.label} (${urlSource})`);
+      const u = new URL(resolvedUrl.split('?')[0]);
       return {
         host:     u.hostname,
         port:     parseInt(u.port || '5432', 10),

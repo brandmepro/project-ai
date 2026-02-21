@@ -66,12 +66,20 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
   if (useRemoteDB) {
     const { target, definition, url } = getActiveRemoteDb();
 
-    if (!url) {
-      logger.error(`⛔ REMOTE_DB_TARGET="${target}" but ${definition.envVar} is not set. Falling back to local.`);
-    } else {
-      logger.log(`Connecting to REMOTE → ${definition.label} (${definition.envVar})`);
+    // Railway auto-injects the Postgres service URL as DATABASE_URL (not RAILWAY_DATABASE_URL).
+    // Use DATABASE_URL as a transparent fallback so Railway's internal wiring always wins
+    // without needing to manually mirror the variable in the dashboard.
+    const resolvedUrl = url || (target === 'railway' ? process.env.DATABASE_URL : undefined);
 
-      const u = new URL(url.split('?')[0]); // strip query params before parsing
+    if (!resolvedUrl) {
+      logger.error(
+        `⛔ REMOTE_DB_TARGET="${target}" but neither ${definition.envVar} nor DATABASE_URL is set. Falling back to local.`,
+      );
+    } else {
+      const urlSource = url ? definition.envVar : 'DATABASE_URL (Railway auto-inject)';
+      logger.log(`Connecting to REMOTE → ${definition.label} (${urlSource})`);
+
+      const u = new URL(resolvedUrl.split('?')[0]); // strip query params before parsing
       return {
         type:     'postgres',
         host:     u.hostname,
