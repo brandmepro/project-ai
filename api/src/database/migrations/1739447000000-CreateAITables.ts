@@ -150,9 +150,9 @@ export class CreateAITables1739447000000 implements MigrationInterface {
     );
 
     // Create indexes
-    await queryRunner.query(`CREATE INDEX "idx_ai_models_provider" ON "ai_models"("provider")`);
-    await queryRunner.query(`CREATE INDEX "idx_ai_models_is_active" ON "ai_models"("is_active")`);
-    await queryRunner.query(`CREATE INDEX "idx_ai_models_is_recommended" ON "ai_models"("is_recommended")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_ai_models_provider" ON "ai_models"("provider")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_ai_models_is_active" ON "ai_models"("is_active")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_ai_models_is_recommended" ON "ai_models"("is_recommended")`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

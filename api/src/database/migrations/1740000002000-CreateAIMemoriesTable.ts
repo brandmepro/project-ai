@@ -2,42 +2,33 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateAIMemoriesTable1740000002000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // uuid_generate_v4() requires the uuid-ossp extension.
-    // Supabase enables it by default; local PostgreSQL does not — safe to always run.
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
-    // Create enum types
     await queryRunner.query(`
-      CREATE TYPE memory_category AS ENUM (
-        'preference',
-        'performance_insight',
-        'style_preference',
-        'business_info',
-        'audience_insight',
-        'correction',
-        'success_pattern',
-        'avoid_pattern',
-        'seasonal',
-        'campaign',
-        'general'
-      )
+      DO $$ BEGIN
+        CREATE TYPE memory_category AS ENUM (
+          'preference', 'performance_insight', 'style_preference', 'business_info',
+          'audience_insight', 'correction', 'success_pattern', 'avoid_pattern',
+          'seasonal', 'campaign', 'general'
+        );
+      EXCEPTION WHEN duplicate_object THEN NULL;
+      END $$;
     `);
 
     await queryRunner.query(`
-      CREATE TYPE memory_source AS ENUM (
-        'user_feedback',
-        'user_edit',
-        'performance_data',
-        'user_input',
-        'auto_learning',
-        'system'
-      )
+      DO $$ BEGIN
+        CREATE TYPE memory_source AS ENUM (
+          'user_feedback', 'user_edit', 'performance_data',
+          'user_input', 'auto_learning', 'system'
+        );
+      EXCEPTION WHEN duplicate_object THEN NULL;
+      END $$;
     `);
 
-    // Create table (using JSONB for embeddings instead of vector type)
+    await queryRunner.query(`DROP TABLE IF EXISTS ai_memories CASCADE`);
     await queryRunner.query(`
       CREATE TABLE ai_memories (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         content TEXT NOT NULL,
         summary TEXT,
@@ -64,21 +55,18 @@ export class CreateAIMemoriesTable1740000002000 implements MigrationInterface {
       )
     `);
 
-    // Create indexes
-    await queryRunner.query(`CREATE INDEX IDX_AI_MEMORIES_USER_ID ON ai_memories(user_id)`);
-    await queryRunner.query(`CREATE INDEX IDX_AI_MEMORIES_CATEGORY ON ai_memories(user_id, category)`);
-    await queryRunner.query(`CREATE INDEX IDX_AI_MEMORIES_IMPORTANCE ON ai_memories(user_id, importance)`);
-    await queryRunner.query(`CREATE INDEX IDX_AI_MEMORIES_ACTIVE ON ai_memories(is_active) WHERE is_active = TRUE`);
-    await queryRunner.query(`CREATE INDEX IDX_AI_MEMORIES_PINNED ON ai_memories(is_pinned) WHERE is_pinned = TRUE`);
-    await queryRunner.query(`CREATE INDEX IDX_AI_MEMORIES_RELATED ON ai_memories(related_platform, related_task_type)`);
-    
-    // GIN index for JSONB embedding field (for faster queries)
-    await queryRunner.query(`CREATE INDEX IDX_AI_MEMORIES_EMBEDDING ON ai_memories USING gin(embedding)`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_AI_MEMORIES_USER_ID" ON ai_memories(user_id)`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_AI_MEMORIES_CATEGORY" ON ai_memories(user_id, category)`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_AI_MEMORIES_IMPORTANCE" ON ai_memories(user_id, importance)`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_AI_MEMORIES_ACTIVE" ON ai_memories(is_active) WHERE is_active = TRUE`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_AI_MEMORIES_PINNED" ON ai_memories(is_pinned) WHERE is_pinned = TRUE`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_AI_MEMORIES_RELATED" ON ai_memories(related_platform, related_task_type)`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_AI_MEMORIES_EMBEDDING" ON ai_memories USING gin(embedding)`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE ai_memories`);
-    await queryRunner.query(`DROP TYPE memory_source`);
-    await queryRunner.query(`DROP TYPE memory_category`);
+    await queryRunner.query(`DROP TABLE IF EXISTS ai_memories`);
+    await queryRunner.query(`DROP TYPE IF EXISTS memory_source`);
+    await queryRunner.query(`DROP TYPE IF EXISTS memory_category`);
   }
 }

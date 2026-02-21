@@ -22,18 +22,18 @@ import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('content')
 export class Content {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ type: 'uuid', name: 'user_id' })
+  @Column({ type: 'int', name: 'user_id' })
   userId: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'uuid', nullable: true, name: 'organization_id' })
-  organizationId: string;
+  @Column({ type: 'int', nullable: true, name: 'organization_id' })
+  organizationId: number;
 
   @ManyToOne(() => Organization)
   @JoinColumn({ name: 'organization_id' })

@@ -8,8 +8,8 @@ import {
 
 @Entity('ai_task_categories')
 export class AITaskCategory {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ unique: true, name: 'category_key' })
   categoryKey: string;

@@ -11,8 +11,8 @@ import { User } from '../../users/entities/user.entity';
 
 @Entity('organizations')
 export class Organization {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   name: string;
@@ -23,8 +23,8 @@ export class Organization {
   @Column({ default: 'free' })
   plan: string;
 
-  @Column({ type: 'uuid', name: 'owner_id' })
-  ownerId: string;
+  @Column({ type: 'int', name: 'owner_id' })
+  ownerId: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'owner_id' })

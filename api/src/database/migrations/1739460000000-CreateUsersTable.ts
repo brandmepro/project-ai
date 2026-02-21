@@ -108,7 +108,7 @@ export class CreateUsersTable1739460000000 implements MigrationInterface {
     );
 
     // Create indexes
-    await queryRunner.query(`CREATE INDEX "idx_users_email" ON "users"("email")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_email" ON "users"("email")`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

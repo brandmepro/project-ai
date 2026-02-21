@@ -52,8 +52,8 @@ export interface ContentStrategy {
  */
 @Entity('platform_account_contexts')
 export class PlatformAccountContext {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ type: 'int', name: 'user_id' })
   userId: number;

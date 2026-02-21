@@ -47,8 +47,8 @@ export interface BrandAssets {
  */
 @Entity('business_profiles')
 export class BusinessProfile {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ type: 'int', name: 'user_id', unique: true })
   userId: number;

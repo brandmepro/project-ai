@@ -47,8 +47,8 @@ export enum MemorySource {
 @Index(['userId', 'category'])
 @Index(['userId', 'importance'])
 export class AIMemory {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ type: 'int', name: 'user_id' })
   userId: number;

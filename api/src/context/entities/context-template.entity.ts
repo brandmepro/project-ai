@@ -29,8 +29,8 @@ export enum TemplateCategory {
  */
 @Entity('context_templates')
 export class ContextTemplate {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ type: 'int', name: 'user_id' })
   userId: number;

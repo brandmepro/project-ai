@@ -12,10 +12,10 @@ import { Platform } from '../../common/enums';
 
 @Entity('platform_connections')
 export class PlatformConnection {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ type: 'uuid', name: 'user_id' })
+  @Column({ type: 'int', name: 'user_id' })
   userId: number;
 
   @ManyToOne(() => User)
