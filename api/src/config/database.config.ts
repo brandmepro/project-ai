@@ -52,7 +52,8 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
     logger.warn('DB_SYNCHRONIZE is true in a non-development environment — this is dangerous!');
   }
 
-  const remoteUrl = process.env.SUPABASE_DATABASE_URL;
+  // Support Railway's auto-injected DATABASE_URL or explicit SUPABASE_DATABASE_URL.
+  const remoteUrl = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL;
 
   const displayHost = useRemoteDB
     ? (remoteUrl ? new URL(remoteUrl).hostname : process.env.LOCAL_DATABASE_HOST)
@@ -62,11 +63,9 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
     ? (remoteUrl ? new URL(remoteUrl).pathname.replace('/', '') : 'postgres')
     : (process.env.LOCAL_DATABASE_NAME || 'businesspro');
 
-  logger.log(`Connecting to ${useRemoteDB ? 'REMOTE Supabase (Direct)' : 'LOCAL PostgreSQL'} | Host: ${displayHost} | DB: ${displayDb}`);
+  logger.log(`Connecting to ${useRemoteDB ? 'REMOTE PostgreSQL' : 'LOCAL PostgreSQL'} | Host: ${displayHost} | DB: ${displayDb}`);
 
-  // Remote (Supabase Direct): up to 10 persistent connections — Direct Connection supports
-  // long-lived connections unlike the Session Pooler which drops idle ones after ~5 min.
-  // Local: 10 — unconstrained local Postgres.
+  // Remote: 10 persistent connections. Local: 10 unconstrained.
   const poolMax = useRemoteDB ? 10 : 10;
   const poolMin = useRemoteDB ? 2 : 1;
 

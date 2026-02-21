@@ -1,27 +1,3 @@
-// Must be the very first import so the patch is in place before any module
-// (TypeORM, pg, etc.) does a DNS lookup.
-// Railway containers have IPv6 addresses configured but no IPv6 route to the
-// internet. pg calls getaddrinfo with AI_ALL, receives AAAA records first and
-// tries to connect → ENETUNREACH. Patching dns.lookup to always request
-// family:4 means only A records are returned, so pg always gets an IPv4 address.
-import * as dns from 'dns';
-(dns as any)._lookup = dns.lookup;
-(dns as any).lookup = function patchedLookup(
-  hostname: string,
-  options: any,
-  callback?: any,
-) {
-  if (typeof options === 'function') {
-    callback = options;
-    options = { family: 4 };
-  } else if (typeof options === 'number') {
-    options = { family: 4 };
-  } else {
-    options = Object.assign({}, options, { family: 4 });
-  }
-  return (dns as any)._lookup(hostname, options, callback);
-};
-
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';

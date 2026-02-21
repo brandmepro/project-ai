@@ -1,77 +1,60 @@
 /**
  * Standalone migration runner for Railway's preDeployCommand.
  *
- * Root cause of ENETUNREACH on Railway: pg calls getaddrinfo with AI_ALL,
- * which returns BOTH A and AAAA records. pg iterates them starting with the
- * IPv6 address. Railway containers have no IPv6 route → ENETUNREACH.
+ * Railway runs this BEFORE the main process starts, so the HTTP server
+ * doesn't exist yet and no health check is active. Migrations complete
+ * fully before the app starts, keeping startup fast and health checks clean.
  *
- * Fix: resolve the Supabase hostname to IPv4 ourselves (dns.lookup family:4)
- * BEFORE creating the DataSource. pg receives a raw IPv4 address as `host`
- * and skips DNS entirely — so it can never pick an IPv6 address.
+ * IMPORTANT: Supabase Direct Connection (db.xxx.supabase.co) is IPv6-only.
+ * Railway has no outbound IPv6. Use the Session Pooler URL or enable the
+ * Supabase IPv4 add-on in your project settings.
+ *
+ * Usage (Railway preDeployCommand):
+ *   node api/dist/database/migrate.js
  */
-import * as dns from 'dns';
 import * as path from 'path';
-import { promisify } from 'util';
 import { DataSource } from 'typeorm';
 import { loadApiEnv } from '../config/load-env';
 
 loadApiEnv();
 
-const dnsLookup = promisify(dns.lookup);
+const useRemote = process.env.USE_REMOTE_DB === 'true';
+const remoteUrl  = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL;
 
-async function resolveIPv4(hostname: string): Promise<string> {
-  try {
-    const result = await dnsLookup(hostname, { family: 4 });
-    console.log(`DNS: ${hostname} → ${result.address} (IPv4)`);
-    return result.address;
-  } catch (err: any) {
-    console.warn(`IPv4 DNS lookup failed for ${hostname} (${err.message}), falling back to hostname`);
-    return hostname;
-  }
-}
-
-async function runMigrations() {
-  console.log('=== Migration Runner ===');
-
-  const useRemote = process.env.USE_REMOTE_DB === 'true';
-  const remoteUrl  = process.env.SUPABASE_DATABASE_URL;
-
-  console.log(`DB mode : ${useRemote ? 'Supabase (Direct)' : 'Local PostgreSQL'}`);
-
-  let connectionConfig: Record<string, any>;
-
+function buildConnectionConfig() {
   if (useRemote && remoteUrl) {
     const u = new URL(remoteUrl);
-    // Resolve the Supabase hostname to IPv4 before pg opens a socket.
-    const ipv4Host = await resolveIPv4(u.hostname);
-
-    connectionConfig = {
-      host: ipv4Host,
+    return {
+      host: u.hostname,
       port: parseInt(u.port || '5432', 10),
       username: decodeURIComponent(u.username),
       password: decodeURIComponent(u.password),
       database: u.pathname.replace(/^\//, ''),
       ssl: { rejectUnauthorized: false },
     };
-  } else {
-    connectionConfig = {
-      host: process.env.LOCAL_DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.LOCAL_DATABASE_PORT || '5432', 10),
-      username: process.env.LOCAL_DATABASE_USER || 'postgres',
-      password: process.env.LOCAL_DATABASE_PASSWORD || 'postgres',
-      database: process.env.LOCAL_DATABASE_NAME || 'businesspro',
-    };
   }
+  return {
+    host: process.env.LOCAL_DATABASE_HOST || 'localhost',
+    port: parseInt(process.env.LOCAL_DATABASE_PORT || '5432', 10),
+    username: process.env.LOCAL_DATABASE_USER || 'postgres',
+    password: process.env.LOCAL_DATABASE_PASSWORD || 'postgres',
+    database: process.env.LOCAL_DATABASE_NAME || 'businesspro',
+  };
+}
 
-  const MigrateDataSource = new DataSource({
-    type: 'postgres',
-    ...(connectionConfig as any),
-    entities: [path.join(__dirname, '../**/*.entity{.ts,.js}')],
-    migrations: [path.join(__dirname, './migrations/*{.ts,.js}')],
-    migrationsTableName: 'migrations',
-    synchronize: false,
-    logging: true,
-  });
+const MigrateDataSource = new DataSource({
+  type: 'postgres',
+  ...(buildConnectionConfig() as any),
+  entities: [path.join(__dirname, '../**/*.entity{.ts,.js}')],
+  migrations: [path.join(__dirname, './migrations/*{.ts,.js}')],
+  migrationsTableName: 'migrations',
+  synchronize: false,
+  logging: true,
+});
+
+async function runMigrations() {
+  console.log('=== Migration Runner ===');
+  console.log(`DB mode : ${useRemote ? 'Remote (Supabase)' : 'Local PostgreSQL'}`);
 
   try {
     console.log('Connecting to database...');

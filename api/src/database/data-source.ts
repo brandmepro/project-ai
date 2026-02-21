@@ -5,7 +5,9 @@ import { loadApiEnv } from '../config/load-env';
 loadApiEnv();
 
 const useRemote = process.env.USE_REMOTE_DB === 'true';
-const remoteUrl = process.env.SUPABASE_DATABASE_URL;
+// Railway auto-injects DATABASE_URL when a Postgres service is in the same project.
+// Fall back to SUPABASE_DATABASE_URL for backward compatibility.
+const remoteUrl = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL;
 
 /**
  * When TypeORM receives `url:`, it passes `connectionString` to the pg Pool.
