@@ -7,6 +7,7 @@ import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { AppController } from './app.controller';
+import { DatabaseHealthService } from './health/database-health.service';
 
 // Config
 import databaseConfig from './config/database.config';
@@ -77,6 +78,7 @@ loadApiEnv();
   ],
   controllers: [AppController],
   providers: [
+    DatabaseHealthService,
     // Global Exception Filter - Proper error responses
     {
       provide: APP_FILTER,

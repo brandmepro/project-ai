@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
+import { getActiveRemoteDb } from './config/remote-database.enum';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -61,7 +62,9 @@ async function bootstrap() {
   logger.log(`Swagger docs available at: http://localhost:${port}/${apiPrefix}/docs`);
 
   const useRemoteDB = configService.get<string>('USE_REMOTE_DB') === 'true';
-  const dbLabel = useRemoteDB ? 'Supabase (Remote)' : 'PostgreSQL (Local)';
+  const dbLabel = useRemoteDB
+    ? `${getActiveRemoteDb().definition.label} (Remote)`
+    : 'PostgreSQL (Local)';
 
   try {
     const dataSource = app.get(DataSource);

@@ -5,7 +5,8 @@ import {
   IsEnum,
   IsOptional,
   IsDateString,
-  IsUUID,
+  IsInt,
+  IsPositive,
   IsObject,
 } from 'class-validator';
 import {
@@ -106,10 +107,12 @@ export class CreateContentDto {
 
   @ApiPropertyOptional({
     description: 'Organization ID (for team accounts)',
+    type: Number,
   })
-  @IsUUID()
+  @IsInt()
+  @IsPositive()
   @IsOptional()
-  organizationId?: string;
+  organizationId?: number;
 
   @ApiPropertyOptional({
     description: 'Engagement metrics',

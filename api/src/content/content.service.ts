@@ -96,7 +96,7 @@ export class ContentService {
     };
   }
 
-  async findOne(id: string, userId: number): Promise<Content> {
+  async findOne(id: number, userId: number): Promise<Content> {
     const content = await this.contentRepository.findOne({
       where: { id, userId },
     });
@@ -109,7 +109,7 @@ export class ContentService {
   }
 
   async update(
-    id: string,
+    id: number,
     userId: number,
     updateContentDto: UpdateContentDto,
   ): Promise<Content> {
@@ -120,12 +120,12 @@ export class ContentService {
     return this.contentRepository.save(content);
   }
 
-  async remove(id: string, userId: number): Promise<void> {
+  async remove(id: number, userId: number): Promise<void> {
     const content = await this.findOne(id, userId);
     await this.contentRepository.softRemove(content);
   }
 
-  async duplicate(id: string, userId: number): Promise<Content> {
+  async duplicate(id: number, userId: number): Promise<Content> {
     const original = await this.findOne(id, userId);
 
     const duplicate = this.contentRepository.create({
@@ -141,7 +141,7 @@ export class ContentService {
     return this.contentRepository.save(duplicate);
   }
 
-  async publish(id: string, userId: number): Promise<Content> {
+  async publish(id: number, userId: number): Promise<Content> {
     const content = await this.findOne(id, userId);
 
     content.status = ContentStatus.PUBLISHED;
@@ -151,7 +151,7 @@ export class ContentService {
   }
 
   async reschedule(
-    id: string,
+    id: number,
     userId: number,
     scheduledFor: Date,
   ): Promise<Content> {

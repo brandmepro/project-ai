@@ -18,8 +18,8 @@ export interface ContextBuildRequest {
 export interface BuildContextResult {
   contextString: string;
   tokensUsed: number;
-  memoriesUsed: string[]; // Memory IDs
-  templatesUsed: string[]; // Template IDs
+  memoriesUsed: number[]; // Memory IDs
+  templatesUsed: number[]; // Template IDs
   metadata: {
     businessProfileIncluded: boolean;
     platformContextIncluded: boolean;
@@ -64,8 +64,8 @@ export class ContextBuilderService {
 
       let contextString = '';
       let tokensUsed = 0;
-      const memoriesUsed: string[] = [];
-      const templatesUsed: string[] = [];
+      const memoriesUsed: number[] = [];
+      const templatesUsed: number[] = [];
       const metadata = {
         businessProfileIncluded: false,
         platformContextIncluded: false,
@@ -214,15 +214,15 @@ export class ContextBuilderService {
   ): Promise<{
     contextString: string;
     tokensUsed: number;
-    memoriesUsed: string[];
-    templatesUsed: string[];
+    memoriesUsed: number[];
+    templatesUsed: number[];
     memoriesCount: number;
     platformContextIncluded: boolean;
   }> {
     const contextParts: string[] = [];
     let tokensUsed = 0;
-    const memoriesUsed: string[] = [];
-    const templatesUsed: string[] = [];
+    const memoriesUsed: number[] = [];
+    const templatesUsed: number[] = [];
     let platformContextIncluded = false;
 
     // 1. Pinned memories (always include)

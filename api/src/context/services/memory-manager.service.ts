@@ -229,7 +229,7 @@ export class MemoryManagerService {
   /**
    * Update memory usage tracking
    */
-  async recordMemoryUsage(memoryId: string): Promise<void> {
+  async recordMemoryUsage(memoryId: number): Promise<void> {
     try {
       await this.memoryRepository.increment(
         { id: memoryId },
@@ -250,7 +250,7 @@ export class MemoryManagerService {
    * Update memory importance based on feedback
    */
   async updateMemoryImportance(
-    memoryId: string,
+    memoryId: number,
     feedbackType: 'positive' | 'negative',
   ): Promise<void> {
     try {
@@ -396,7 +396,7 @@ export class MemoryManagerService {
   /**
    * Delete memory permanently
    */
-  async deleteMemory(memoryId: string): Promise<void> {
+  async deleteMemory(memoryId: number): Promise<void> {
     await this.memoryRepository.delete(memoryId);
     this.logger.log(`Deleted memory ${memoryId}`);
   }

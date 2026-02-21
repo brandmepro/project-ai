@@ -11,6 +11,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -176,14 +177,14 @@ export class ContextController {
 
   @Delete('memories/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteMemory(@Req() req, @Param('id') id: string) {
+  async deleteMemory(@Req() req, @Param('id', ParseIntPipe) id: number) {
     await this.memoryManager.deleteMemory(id);
   }
 
   @Post('memories/:id/feedback')
   async provideFeedback(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: { type: 'positive' | 'negative' },
   ) {
     await this.memoryManager.updateMemoryImportance(id, body.type);
@@ -246,7 +247,7 @@ export class ContextController {
   @Put('templates/:id')
   async updateTemplate(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateTemplateDto,
   ) {
     const template = await this.templateRepository.findOne({
@@ -268,7 +269,7 @@ export class ContextController {
 
   @Delete('templates/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteTemplate(@Req() req, @Param('id') id: string) {
+  async deleteTemplate(@Req() req, @Param('id', ParseIntPipe) id: number) {
     await this.templateRepository.delete(id);
   }
 

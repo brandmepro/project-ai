@@ -2,6 +2,7 @@ import * as path from 'path';
 import { Logger } from '@nestjs/common';
 import { registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { getActiveRemoteDb } from './remote-database.enum';
 
 const logger = new Logger('DatabaseConfig');
 
@@ -18,32 +19,21 @@ function readBooleanEnv(keys: string[], fallback = false): boolean {
 
 export default registerAs('database', (): TypeOrmModuleOptions => {
   const isDevelopment = process.env.NODE_ENV === 'development';
-  const useRemoteDB = process.env.USE_REMOTE_DB === 'true';
+  const useRemoteDB   = process.env.USE_REMOTE_DB === 'true';
 
   let synchronize = readBooleanEnv([
-    'DB_SYNCHRONIZE',
-    'DB_SYNC',
-    'DB_SYNC_TEST',
-    'DATABASE_SYNCHRONIZE',
+    'DB_SYNCHRONIZE', 'DB_SYNC', 'DB_SYNC_TEST', 'DATABASE_SYNCHRONIZE',
   ]);
   const migrationsRun = readBooleanEnv([
-    'DB_MIGRATIONS_RUN',
-    'DB_MIGRATION_RUN',
-    'DB_MIGRATION',
-    'DATABASE_MIGRATIONS_RUN',
-    'DATABASE_MIGRATION_RUN',
+    'DB_MIGRATIONS_RUN', 'DB_MIGRATION_RUN', 'DB_MIGRATION', 'DATABASE_MIGRATIONS_RUN',
   ]);
   const logging = readBooleanEnv(['DB_LOGGING', 'DATABASE_LOGGING']);
 
-  // CRITICAL: Never run both synchronize AND migrationsRun simultaneously.
-  // Migrations create PostgreSQL ENUM types (e.g. memory_category, memory_source).
-  // If synchronize also runs it will try to CREATE those same types again →
-  // "ERROR: type already exists" → app crashes on a fresh database.
-  // Migrations always win — they are explicit and version-controlled.
+  // CRITICAL: synchronize + migrationsRun simultaneously causes "type already exists" errors.
   if (synchronize && migrationsRun) {
     logger.error(
       '⛔ CONFLICT: DB_SYNCHRONIZE=true AND DB_MIGRATIONS_RUN=true cannot both be active! ' +
-      'Disabling synchronize automatically. Set DB_SYNCHRONIZE=false in your .env to silence this warning.',
+      'Disabling synchronize. Set DB_SYNCHRONIZE=false to silence this warning.',
     );
     synchronize = false;
   }
@@ -52,29 +42,8 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
     logger.warn('DB_SYNCHRONIZE is true in a non-development environment — this is dangerous!');
   }
 
-  // Support Railway's auto-injected DATABASE_URL or explicit SUPABASE_DATABASE_URL.
-  const remoteUrl = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL;
-
-  const displayHost = useRemoteDB
-    ? (remoteUrl ? new URL(remoteUrl).hostname : process.env.LOCAL_DATABASE_HOST)
-    : (process.env.LOCAL_DATABASE_HOST || 'localhost');
-
-  const displayDb = useRemoteDB
-    ? (remoteUrl ? new URL(remoteUrl).pathname.replace('/', '') : 'postgres')
-    : (process.env.LOCAL_DATABASE_NAME || 'businesspro');
-
-  logger.log(`Connecting to ${useRemoteDB ? 'REMOTE PostgreSQL' : 'LOCAL PostgreSQL'} | Host: ${displayHost} | DB: ${displayDb}`);
-
-  // Remote: 10 persistent connections. Local: 10 unconstrained.
-  const poolMax = useRemoteDB ? 10 : 10;
-  const poolMin = useRemoteDB ? 2 : 1;
-
-  // CRITICAL: TypeORM's internal glob resolver can silently find 0 files on Windows
-  // when paths contain mixed separators (backslash from __dirname + forward-slash literals).
-  // Always normalise to forward-slashes so the glob works on every OS.
-  const toGlob = (...parts: string[]) =>
-    path.join(...parts).replace(/\\/g, '/');
-
+  // ── Glob paths (forward-slashes prevent silent Windows failures) ──────────
+  const toGlob = (...parts: string[]) => path.join(...parts).replace(/\\/g, '/');
   const migrationsGlob = toGlob(__dirname, '..', 'database', 'migrations', '*{.ts,.js}');
   const entitiesGlob   = toGlob(__dirname, '..', '**', '*.entity{.ts,.js}');
 
@@ -83,56 +52,63 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
   logger.log(`synchronize=${synchronize} | migrationsRun=${migrationsRun} | logging=${logging}`);
 
   const shared = {
-    entities: [entitiesGlob],
-    autoLoadEntities: true as const,
+    entities:                [entitiesGlob],
+    autoLoadEntities:        true as const,
     synchronize,
     migrationsRun,
-    migrations: [migrationsGlob],
-    migrationsTableName: 'migrations', // explicit — matches data-source.ts
-    migrationsTransactionMode: 'each' as const, // each migration in its own tx for safety
+    migrations:              [migrationsGlob],
+    migrationsTableName:     'migrations',
+    migrationsTransactionMode: 'each' as const,
     logging,
-    poolSize: poolMax,
-    extra: {
-      max: poolMax,
-      min: poolMin,
-      connectionTimeoutMillis: 30000,
-      idleTimeoutMillis: 600000,
-      keepAlive: true,
-      keepAliveInitialDelayMillis: 10000,
-      // Force IPv4: Railway's network has no IPv6 route; DNS may return an AAAA
-      // record for Supabase which causes ENETUNREACH. family:4 tells pg to only
-      // resolve A (IPv4) records.
-      family: 4,
-    },
   };
 
-  if (useRemoteDB && remoteUrl) {
-    // Do NOT use `url:` here. When TypeORM passes a connectionString to the pg
-    // Pool, pg parses it internally and the `family: 4` in `extra` is ignored.
-    // Passing discrete params ensures pg honours `family: 4` and only resolves
-    // A (IPv4) records — preventing ENETUNREACH on Railway's IPv6-capable DNS.
-    const u = new URL(remoteUrl);
-    return {
-      type: 'postgres',
-      host: u.hostname,
-      port: parseInt(u.port || '5432', 10),
-      username: decodeURIComponent(u.username),
-      password: decodeURIComponent(u.password),
-      database: u.pathname.replace(/^\//, ''),
-      schema: 'public',
-      ssl: { rejectUnauthorized: false },
-      ...shared,
-    };
+  // ── Remote DB ─────────────────────────────────────────────────────────────
+  if (useRemoteDB) {
+    const { target, definition, url } = getActiveRemoteDb();
+
+    if (!url) {
+      logger.error(`⛔ REMOTE_DB_TARGET="${target}" but ${definition.envVar} is not set. Falling back to local.`);
+    } else {
+      logger.log(`Connecting to REMOTE → ${definition.label} (${definition.envVar})`);
+
+      const u = new URL(url.split('?')[0]); // strip query params before parsing
+      return {
+        type:     'postgres',
+        host:     u.hostname,
+        port:     parseInt(u.port || '5432', 10),
+        username: decodeURIComponent(u.username),
+        password: decodeURIComponent(u.password),
+        database: u.pathname.replace(/^\//, ''),
+        schema:   'public',
+        ssl:      definition.ssl ? { rejectUnauthorized: false } : false,
+        poolSize: 10,
+        extra: {
+          max:                         10,
+          min:                         2,
+          connectionTimeoutMillis:     30_000,
+          idleTimeoutMillis:           600_000,
+          keepAlive:                   true,
+          keepAliveInitialDelayMillis: 10_000,
+          family:                      4,   // prefer IPv4; avoids ENETUNREACH on Railway
+        },
+        ...shared,
+      };
+    }
   }
 
+  // ── Local DB ──────────────────────────────────────────────────────────────
+  logger.log(`Connecting to LOCAL PostgreSQL | Host: ${process.env.LOCAL_DATABASE_HOST || 'localhost'}`);
   return {
-    type: 'postgres',
-    host: process.env.LOCAL_DATABASE_HOST || 'localhost',
-    port: parseInt(process.env.LOCAL_DATABASE_PORT || '5432', 10),
-    username: process.env.LOCAL_DATABASE_USER || 'postgres',
+    type:     'postgres',
+    host:     process.env.LOCAL_DATABASE_HOST     || 'localhost',
+    port:     parseInt(process.env.LOCAL_DATABASE_PORT || '5432', 10),
+    username: process.env.LOCAL_DATABASE_USER     || 'postgres',
     password: process.env.LOCAL_DATABASE_PASSWORD || 'postgres',
-    database: process.env.LOCAL_DATABASE_NAME || 'businesspro',
-    schema: 'public',
+    database: process.env.LOCAL_DATABASE_NAME     || 'businesspro',
+    schema:   'public',
+    ssl:      false,
+    poolSize: 10,
+    extra: { max: 10, min: 1, connectionTimeoutMillis: 30_000 },
     ...shared,
   };
 });

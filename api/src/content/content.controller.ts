@@ -8,7 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
-  ParseUUIDPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -103,7 +103,7 @@ export class ContentController {
   @ApiResponse({ status: 200, description: 'Content details' })
   @ApiResponse({ status: 404, description: 'Content not found' })
   async findOne(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.contentService.findOne(id, userId);
@@ -114,7 +114,7 @@ export class ContentController {
   @ApiResponse({ status: 200, description: 'Content updated successfully' })
   @ApiResponse({ status: 404, description: 'Content not found' })
   async update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
     @Body() updateContentDto: UpdateContentDto,
   ) {
@@ -126,7 +126,7 @@ export class ContentController {
   @ApiResponse({ status: 200, description: 'Content deleted successfully' })
   @ApiResponse({ status: 404, description: 'Content not found' })
   async remove(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
     await this.contentService.remove(id, userId);
@@ -138,7 +138,7 @@ export class ContentController {
   @ApiResponse({ status: 201, description: 'Content duplicated successfully' })
   @ApiResponse({ status: 404, description: 'Content not found' })
   async duplicate(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.contentService.duplicate(id, userId);
@@ -149,7 +149,7 @@ export class ContentController {
   @ApiResponse({ status: 200, description: 'Content published successfully' })
   @ApiResponse({ status: 404, description: 'Content not found' })
   async publish(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
   ) {
     return this.contentService.publish(id, userId);
@@ -160,7 +160,7 @@ export class ContentController {
   @ApiResponse({ status: 200, description: 'Content rescheduled successfully' })
   @ApiResponse({ status: 404, description: 'Content not found' })
   async reschedule(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
     @Body('scheduledFor') scheduledFor: string,
   ) {

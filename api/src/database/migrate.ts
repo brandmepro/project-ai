@@ -5,56 +5,78 @@
  * doesn't exist yet and no health check is active. Migrations complete
  * fully before the app starts, keeping startup fast and health checks clean.
  *
- * IMPORTANT: Supabase Direct Connection (db.xxx.supabase.co) is IPv6-only.
- * Railway has no outbound IPv6. Use the Session Pooler URL or enable the
- * Supabase IPv4 add-on in your project settings.
- *
  * Usage (Railway preDeployCommand):
  *   node api/dist/database/migrate.js
  */
 import * as path from 'path';
 import { DataSource } from 'typeorm';
 import { loadApiEnv } from '../config/load-env';
+import { getActiveRemoteDb, RemoteDatabase } from '../config/remote-database.enum';
 
 loadApiEnv();
 
 const useRemote = process.env.USE_REMOTE_DB === 'true';
-const remoteUrl  = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL;
 
 function buildConnectionConfig() {
-  if (useRemote && remoteUrl) {
-    const u = new URL(remoteUrl);
-    return {
-      host: u.hostname,
-      port: parseInt(u.port || '5432', 10),
-      username: decodeURIComponent(u.username),
-      password: decodeURIComponent(u.password),
-      database: u.pathname.replace(/^\//, ''),
-      ssl: { rejectUnauthorized: false },
-    };
+  if (useRemote) {
+    const { target, definition, url } = getActiveRemoteDb();
+
+    // On Railway CI the internal DATABASE_URL always wins (it's auto-injected).
+    // For other remotes, the registered env var is used.
+    const resolvedUrl =
+      target === RemoteDatabase.RAILWAY
+        ? (process.env.DATABASE_URL || url)   // prefer Railway's auto-injected var
+        : url;
+
+    if (!resolvedUrl) {
+      console.warn(
+        `[migrate] REMOTE_DB_TARGET="${target}" but ${definition.envVar} is not set. ` +
+        `Falling back to local PostgreSQL.`,
+      );
+    } else {
+      console.log(`[migrate] Remote DB → ${definition.label}`);
+      const u = new URL(resolvedUrl.split('?')[0]);
+      return {
+        host:     u.hostname,
+        port:     parseInt(u.port || '5432', 10),
+        username: decodeURIComponent(u.username),
+        password: decodeURIComponent(u.password),
+        database: u.pathname.replace(/^\//, ''),
+        ssl:      definition.ssl ? { rejectUnauthorized: false } : false,
+        extra:    { family: 4 },
+      };
+    }
   }
+
+  console.log(`[migrate] Local DB → ${process.env.LOCAL_DATABASE_HOST || 'localhost'}`);
   return {
-    host: process.env.LOCAL_DATABASE_HOST || 'localhost',
-    port: parseInt(process.env.LOCAL_DATABASE_PORT || '5432', 10),
-    username: process.env.LOCAL_DATABASE_USER || 'postgres',
+    host:     process.env.LOCAL_DATABASE_HOST     || 'localhost',
+    port:     parseInt(process.env.LOCAL_DATABASE_PORT || '5432', 10),
+    username: process.env.LOCAL_DATABASE_USER     || 'postgres',
     password: process.env.LOCAL_DATABASE_PASSWORD || 'postgres',
-    database: process.env.LOCAL_DATABASE_NAME || 'businesspro',
+    database: process.env.LOCAL_DATABASE_NAME     || 'businesspro',
+    ssl:      false,
+    extra:    {},
   };
 }
 
 const MigrateDataSource = new DataSource({
-  type: 'postgres',
+  type:                'postgres',
   ...(buildConnectionConfig() as any),
-  entities: [path.join(__dirname, '../**/*.entity{.ts,.js}')],
-  migrations: [path.join(__dirname, './migrations/*{.ts,.js}')],
+  entities:            [path.join(__dirname, '../**/*.entity{.ts,.js}')],
+  migrations:          [path.join(__dirname, './migrations/*{.ts,.js}')],
   migrationsTableName: 'migrations',
-  synchronize: false,
-  logging: true,
+  synchronize:         false,
+  logging:             true,
 });
 
 async function runMigrations() {
+  const { target, definition } = getActiveRemoteDb();
+  const label = useRemote ? `Remote (${definition.label})` : 'Local PostgreSQL';
+
   console.log('=== Migration Runner ===');
-  console.log(`DB mode : ${useRemote ? 'Remote (Supabase)' : 'Local PostgreSQL'}`);
+  console.log(`DB mode  : ${label}`);
+  if (useRemote) console.log(`DB target: ${target} → ${definition.envVar}`);
 
   try {
     console.log('Connecting to database...');
