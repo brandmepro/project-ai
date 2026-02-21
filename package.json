@@ -53,7 +53,13 @@
     "setup:java": "powershell -ExecutionPolicy Bypass -File ./packages/scripts/setup-java-env.ps1",
     "clean": "bun run --filter \"*\" --parallel exec rm -rf node_modules dist .next coverage",
     "clean:install": "bun run clean && rm -rf node_modules && bun install",
-    "scripts": "node scripts/index.js"
+    "scripts": "node scripts/index.js",
+
+    "docker:build": "docker build -t businesspro-api:local .",
+    "docker:run": "docker run --rm -p 8000:8000 --env-file api/.env -e PORT=8000 --name businesspro-local businesspro-api:local",
+    "docker:preview": "docker build -t businesspro-api:local . && docker run --rm -p 8000:8000 --env-file api/.env -e PORT=8000 --name businesspro-local businesspro-api:local",
+    "docker:stop": "docker stop businesspro-local",
+    "docker:clean": "docker rmi businesspro-api:local"
   },
   "dependencies": {
     "class-validator": "^0.14.3",
